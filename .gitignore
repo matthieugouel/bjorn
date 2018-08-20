@@ -1,0 +1,9 @@
+# Rust defaults
+/target
+**/*.rs.bk
+
+# Apple
+.DS_Store
+
+# Test file for dev purposes
+examples/test.bj
