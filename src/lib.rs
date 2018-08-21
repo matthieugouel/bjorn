@@ -31,3 +31,12 @@ pub fn interpret(input: &str) -> String {
     ).interpret().to_string()
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn library_entrypoint() {
+        assert_eq!(interpret(""), "")
+    }
+}

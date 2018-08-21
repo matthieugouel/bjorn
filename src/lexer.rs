@@ -73,3 +73,26 @@ impl<'a> Iterator for Lexer<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn whitespace() {
+        let mut test_lexer = Lexer::new(" ");
+        assert_eq!(test_lexer.next(), None);
+    }
+
+    #[test]
+    fn integer_number() {
+        let mut test_lexer = Lexer::new("1");
+        assert_eq!(test_lexer.next().unwrap(), Token::INT("1".to_string()));
+    }
+
+    #[test]
+    fn float_number() {
+        let mut test_lexer = Lexer::new("1.0");
+        assert_eq!(test_lexer.next().unwrap(), Token::FLOAT("1.0".to_string()));
+    }
+}
