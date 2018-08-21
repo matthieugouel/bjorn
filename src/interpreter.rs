@@ -35,6 +35,7 @@ impl<'a> Interpreter<'a> {
             AST::FloatNumber {token} => {
                 Value::Float(token.float().unwrap())
             },
+            AST::Empty => Value::None
         }
     }
 

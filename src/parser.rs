@@ -20,7 +20,7 @@ impl<'a> Parser<'a> {
     }
 
     fn process(&mut self) -> Token {
-        self.lexer.next().unwrap()
+        self.lexer.next().unwrap_or(Token::EOF)
     }
 
     fn expr(&mut self) -> AST {
@@ -76,6 +76,7 @@ impl<'a> Parser<'a> {
                 self.process();
                 expr
             },
+            Token::EOF => AST::Empty,
             _ => panic!("Syntax error."),
         }
     }
