@@ -86,8 +86,8 @@ impl Div for Value {
         match (self, other) {
             (Value::Int(a), Value::Int(b)) => Value::Float(a as f64 / b as f64),
             (Value::Float(a), Value::Float(b)) => Value::Float(a / b),
-            (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 * b),
-            (Value::Float(a), Value::Int(b)) => Value::Float(a * b as f64),
+            (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 / b),
+            (Value::Float(a), Value::Int(b)) => Value::Float(a / b as f64),
             (Value::None, _) => panic!("Invalid operation."),
             (_, Value::None) =>panic!("Invalid operation."),
         }
