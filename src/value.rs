@@ -3,6 +3,7 @@ use std::ops::Add;
 use std::ops::Sub;
 use std::ops::Mul;
 use std::ops::Div;
+use std::ops::Neg;
 
 #[derive(Debug, PartialEq)]
 pub enum Value {
@@ -92,3 +93,15 @@ impl Div for Value {
         }
     }
 }
+
+impl Neg for Value {
+    type Output = Value;
+
+    fn neg(self) -> Value {
+        match self {
+            Value::Int(a) => Value::Int(-a),
+            Value::Float(a) => Value::Float(-a),
+            Value::None => panic!("Invalid operation."),
+        }
+    }
+    }

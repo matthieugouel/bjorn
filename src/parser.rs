@@ -23,8 +23,8 @@ impl<'a> Parser<'a> {
         self.lexer.next().unwrap_or(Token::EOF)
     }
 
+    /// expr: term (('+' | '-') term)*
     fn expr(&mut self) -> AST {
-        // expr: term (('+' | '-') term)*
         let mut node = self.term();
         loop {
             if *self.peek() == Token::PLUS
@@ -43,8 +43,8 @@ impl<'a> Parser<'a> {
         node
     }
 
+    /// term: atom (('*' | '/') atom)*
     fn term(&mut self) -> AST {
-        // term: atom (('*' | '/') atom)*
         let mut node = self.atom();
         loop {
             if *self.peek() == Token::MUL
@@ -63,10 +63,12 @@ impl<'a> Parser<'a> {
         node
     }
 
+    /// atom: INT_NUMBER
+    ///     | FLOAT_NUMBER
+    ///     | PLUS atom
+    ///     | MINUS atom
+    ///     | '(' expr ')'
     fn atom (&mut self) -> AST {
-        // atom: INT_NUMBER
-        //     | FLOAT_NUMBER
-        //     | '(' expr ')'
         let token = self.process();
         match token {
             Token::INT(_) => AST::IntNumber {token: token},
@@ -75,6 +77,12 @@ impl<'a> Parser<'a> {
                 let expr = self.expr();
                 self.process();
                 expr
+            },
+            Token::PLUS => {
+                AST::UnaryOperation {op: token, right: Box::new(self.atom())}
+            },
+            Token::MINUS => {
+                AST::UnaryOperation {op: token, right: Box::new(self.atom())}
             },
             Token::EOF => AST::Empty,
             _ => panic!("Syntax error."),

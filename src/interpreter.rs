@@ -29,6 +29,15 @@ impl<'a> Interpreter<'a> {
                     panic!("Interpreter error.")
                 }
             },
+            AST::UnaryOperation {op, right} => {
+                if op == Token::PLUS {
+                    self.visit(*right)
+                } else if op == Token::MINUS {
+                    -self.visit(*right)
+                } else {
+                    panic!("Interpreter error.")
+                }
+            }
             AST::IntNumber {token} => {
                 Value::Int(token.integer().unwrap())
             },
