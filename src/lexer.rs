@@ -22,6 +22,17 @@ impl<'a> Lexer<'a> {
         self.input.peek()
     }
 
+
+    fn comment (&mut self) {
+        while let Some(&c) = self.peek() {
+            if c == '\n' {
+                break;
+            } else {
+                self.advance();
+            }
+        }
+    }
+
     fn whitespace (&mut self) {
         while let Some(&c) = self.peek() {
             if !c.is_whitespace() {
@@ -69,7 +80,11 @@ impl<'a> Iterator for Lexer<'a> {
             Some('/') => Some(Token::DIV),
             Some('(') => Some(Token::LPAREN),
             Some(')') => Some(Token::RPAREN),
-            _ => None,
+            Some('#') => {
+                self.comment();
+                self.next()
+            }
+            _ => Some(Token::EOF),
         }
     }
 }
@@ -80,19 +95,25 @@ mod tests {
 
     #[test]
     fn whitespace() {
-        let mut test_lexer = Lexer::new(" ");
-        assert_eq!(test_lexer.next(), None);
+        let mut lexer = Lexer::new(" ");
+        assert_eq!(lexer.next().unwrap(), Token::EOF);
+    }
+
+    #[test]
+    fn comment() {
+        let mut lexer = Lexer::new("# 2+2");
+        assert_eq!(lexer.next().unwrap(), Token::EOF);
     }
 
     #[test]
     fn integer_number() {
-        let mut test_lexer = Lexer::new("1");
-        assert_eq!(test_lexer.next().unwrap(), Token::INT("1".to_string()));
+        let mut lexer = Lexer::new("1");
+        assert_eq!(lexer.next().unwrap(), Token::INT("1".to_string()));
     }
 
     #[test]
     fn float_number() {
-        let mut test_lexer = Lexer::new("1.0");
-        assert_eq!(test_lexer.next().unwrap(), Token::FLOAT("1.0".to_string()));
+        let mut lexer = Lexer::new("1.0");
+        assert_eq!(lexer.next().unwrap(), Token::FLOAT("1.0".to_string()));
     }
 }
