@@ -73,6 +73,7 @@ impl<'a> Iterator for Lexer<'a> {
         self.whitespace();
 
          match self.input.next() {
+            Some('\n') => self.next(),
             Some(c) if c.is_numeric() => self.number(c),
             Some('+') => Some(Token::PLUS),
             Some('-') => Some(Token::MINUS),
@@ -84,7 +85,8 @@ impl<'a> Iterator for Lexer<'a> {
                 self.comment();
                 self.next()
             }
-            _ => Some(Token::EOF),
+
+            _ => None,
         }
     }
 }
@@ -96,13 +98,13 @@ mod tests {
     #[test]
     fn whitespace() {
         let mut lexer = Lexer::new(" ");
-        assert_eq!(lexer.next().unwrap(), Token::EOF);
+        assert_eq!(lexer.next(), None);
     }
 
     #[test]
     fn comment() {
         let mut lexer = Lexer::new("# 2+2");
-        assert_eq!(lexer.next().unwrap(), Token::EOF);
+        assert_eq!(lexer.next(), None);
     }
 
     #[test]

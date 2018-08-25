@@ -23,6 +23,15 @@ impl<'a> Parser<'a> {
         self.lexer.next().unwrap_or(Token::EOF)
     }
 
+    /// program: expression_statement
+    fn program(&mut self) -> AST {
+        let mut children = Vec::new();
+        while *self.peek() != Token::EOF {
+            children.push(Box::new(self.expr()));
+        }
+        AST::Program {children: children}
+    }
+
     /// expr: term (('+' | '-') term)*
     fn expr(&mut self) -> AST {
         let mut node = self.term();
@@ -90,6 +99,6 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse(&mut self) -> AST {
-        self.expr()
+        self.program()
     }
 }
