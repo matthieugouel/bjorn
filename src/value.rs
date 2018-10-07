@@ -5,7 +5,7 @@ use std::ops::Mul;
 use std::ops::Div;
 use std::ops::Neg;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Value {
     Int(i32),
     Float(f64),

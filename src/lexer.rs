@@ -63,6 +63,17 @@ impl<'a> Lexer<'a> {
         }
         Some(Token::INT(number))
     }
+
+    fn id(&mut self, id: char) -> Option<Token> {
+        let mut id = id.to_string();
+        while let Some(&c) = self.peek() {
+            if !c.is_alphanumeric() {
+                break;
+            }
+            id.push(self.advance().unwrap()); // TODO handle unwrap properly
+        }
+        Some(Token::ID(id))
+    }
 }
 
 impl<'a> Iterator for Lexer<'a> {
@@ -75,6 +86,8 @@ impl<'a> Iterator for Lexer<'a> {
          match self.input.next() {
             Some('\n') => self.next(),
             Some(c) if c.is_numeric() => self.number(c),
+            Some(c) if c.is_alphabetic() => self.id(c),
+            Some('=') => Some(Token::ASSIGN),
             Some('+') => Some(Token::PLUS),
             Some('-') => Some(Token::MINUS),
             Some('*') => Some(Token::MUL),
@@ -117,5 +130,11 @@ mod tests {
     fn float_number() {
         let mut lexer = Lexer::new("1.0");
         assert_eq!(lexer.next().unwrap(), Token::FLOAT("1.0".to_string()));
+    }
+
+    #[test]
+    fn id() {
+        let mut lexer = Lexer::new("bjørn");
+        assert_eq!(lexer.next().unwrap(), Token::ID("bjørn".to_string()));
     }
 }

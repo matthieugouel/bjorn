@@ -27,9 +27,22 @@ impl<'a> Parser<'a> {
     fn program(&mut self) -> AST {
         let mut children = Vec::new();
         while *self.peek() != Token::EOF {
-            children.push(Box::new(self.expr()));
+            children.push(Box::new(self.expression_statement()));
         }
         AST::Program {children: children}
+    }
+
+    /// expression_statement: expr ['=' expr]
+    fn expression_statement(&mut self) -> AST {
+        let mut node = self.expr();
+        if *self.peek() == Token::ASSIGN {
+            self.process();
+            let right = self.expr();
+            node = AST::Assignment {
+                left: Box::new(node), right: Box::new(right)
+            };
+        }
+        node
     }
 
     /// expr: term (('+' | '-') term)*
@@ -77,6 +90,7 @@ impl<'a> Parser<'a> {
     ///     | PLUS atom
     ///     | MINUS atom
     ///     | '(' expr ')'
+    ///     | variable
     fn atom (&mut self) -> AST {
         let token = self.process();
         match token {
@@ -93,6 +107,7 @@ impl<'a> Parser<'a> {
             Token::MINUS => {
                 AST::UnaryOperation {op: token, right: Box::new(self.atom())}
             },
+            Token::ID(_) => AST::Variable {id: token},
             Token::EOF => AST::Empty,
             _ => panic!("Syntax error."),
         }
