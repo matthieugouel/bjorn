@@ -1,31 +1,24 @@
 extern crate bjorn;
+extern crate clap;
 
-use std::env;
-use std::io;
 use std::fs;
+use std::io;
+use clap::*;
 
 fn main() -> io::Result<()> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
-        return Err(
-            io::Error::new(io::ErrorKind::InvalidInput, "Please enter the file path.")
-        );
-    }
+    let matches = App::new("bjorn")
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about(crate_description!())
+        .arg(Arg::with_name("FILEPATH")
+                 .required(true)
+                 .takes_value(true)
+                 .index(1)
+                 .help("File path of the source code to interpret."))
+        .get_matches();
 
-    let input = fs::read_to_string(&args[1])?;
+    let input = fs::read_to_string(matches.value_of("FILEPATH").unwrap())?;
 
     println!("{}", bjorn::interpret(&input));
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn binary_entrypoint_with_no_arguments() {
-        // The test run `main()` function with no command line argument.
-        // Therefore, the main must throw an `InvalidInput` I/O error.
-        assert!(main().is_err())
-    }
 }

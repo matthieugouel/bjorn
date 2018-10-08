@@ -1,6 +1,8 @@
 [package]
 name = "bjorn"
 version = "0.0.0"
-authors = ["matthieu <matthieu.gouel@gmail.com>"]
+authors = ["Matthieu Gouel <matthieu.gouel@gmail.com>"]
+description = "Foolish attempt to build an interpreter."
 
 [dependencies]
+clap = "~2.32.0"
