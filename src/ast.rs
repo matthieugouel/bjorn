@@ -1,6 +1,6 @@
 use token::Token;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum AST {
     Program {children: Vec<Box<AST>>},
     Assignment {left: Box<AST>, right: Box<AST>},

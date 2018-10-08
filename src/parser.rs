@@ -117,3 +117,161 @@ impl<'a> Parser<'a> {
         self.program()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use lexer::Lexer;
+    use token::Token;
+    use ast::AST;
+
+    fn parser_generator(input: &str) -> Parser {
+        Parser::new(
+            Lexer::new(input)
+        )
+    }
+
+    #[test]
+    fn assignment_statement() {
+        let mut parser = parser_generator("a = 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::Assignment {
+                    left: Box::new(AST::Variable {id: Token::ID("a".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn term_plus_operation() {
+        let mut parser = parser_generator("1 + 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    op: Token::PLUS,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn term_minus_operation() {
+        let mut parser = parser_generator("1 - 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    op: Token::MINUS,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn term_mul_operation() {
+        let mut parser = parser_generator("1 * 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    op: Token::MUL,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn term_div_operation() {
+        let mut parser = parser_generator("1 / 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    op: Token::DIV,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn atom_int_number() {
+        let mut parser = parser_generator("1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::IntNumber {token: Token::INT("1".to_string())})
+            )}
+        );
+    }
+
+    #[test]
+    fn atom_float_number() {
+        let mut parser = parser_generator("1.0");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::FloatNumber {token: Token::FLOAT("1.0".to_string())})
+            )}
+        );
+    }
+
+    #[test]
+    fn atom_parenthesis() {
+        let mut parser = parser_generator("(1)");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::IntNumber {token: Token::INT("1".to_string())})
+            )}
+        );
+    }
+
+    #[test]
+    fn atom_plus_unary() {
+        let mut parser = parser_generator("+1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::UnaryOperation {
+                    op: Token::PLUS,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())})
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn atom_minus_unary() {
+        let mut parser = parser_generator("-1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::UnaryOperation {
+                    op: Token::MINUS,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())})
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn atom_variable() {
+        let mut parser = parser_generator("a");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::Variable {id: Token::ID("a".to_string())})
+            )}
+        );
+    }
+
+    #[test]
+    fn empty() {
+        let mut parser = parser_generator("");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!()}
+        );
+    }
+}

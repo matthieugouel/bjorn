@@ -1,6 +1,11 @@
 extern crate bjorn;
 
 #[test]
+fn empty_statement() {
+    assert_eq!(bjorn::interpret(""), String::from(""));
+}
+
+#[test]
 fn statements_with_integers() {
     assert_eq!(bjorn::interpret("2 + 2"), String::from("4"));
     assert_eq!(bjorn::interpret("2 - 2"), String::from("0"));

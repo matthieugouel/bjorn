@@ -22,8 +22,7 @@ impl<'a> Lexer<'a> {
         self.input.peek()
     }
 
-
-    fn comment (&mut self) {
+    fn comment (&mut self) -> Option<Token> {
         while let Some(&c) = self.peek() {
             if c == '\n' {
                 break;
@@ -31,6 +30,7 @@ impl<'a> Lexer<'a> {
                 self.advance();
             }
         }
+        self.next()
     }
 
     fn whitespace (&mut self) {
@@ -94,10 +94,7 @@ impl<'a> Iterator for Lexer<'a> {
             Some('/') => Some(Token::DIV),
             Some('(') => Some(Token::LPAREN),
             Some(')') => Some(Token::RPAREN),
-            Some('#') => {
-                self.comment();
-                self.next()
-            }
+            Some('#') => self.comment(),
 
             _ => None,
         }
@@ -108,33 +105,90 @@ impl<'a> Iterator for Lexer<'a> {
 mod tests {
     use super::*;
 
+    use token::Token;
+
+    fn scan_generator(input: &str) -> Vec<Token> {
+        let lexer = Lexer::new(input);
+        let mut scan = Vec::new();
+        for t in lexer {
+            scan.push(t);
+        }
+        scan
+    }
+
     #[test]
     fn whitespace() {
-        let mut lexer = Lexer::new(" ");
-        assert_eq!(lexer.next(), None);
+        let scan = scan_generator(" ");
+        assert_eq!(scan, vec!());
+    }
+
+    #[test]
+    fn lf() {
+        let scan = scan_generator("\n");
+        assert_eq!(scan, vec!());
     }
 
     #[test]
     fn comment() {
-        let mut lexer = Lexer::new("# 2+2");
-        assert_eq!(lexer.next(), None);
+        let scan = scan_generator("# 2+2");
+        assert_eq!(scan, vec!());
     }
 
     #[test]
     fn integer_number() {
-        let mut lexer = Lexer::new("1");
-        assert_eq!(lexer.next().unwrap(), Token::INT("1".to_string()));
+        let scan = scan_generator("1");
+        assert_eq!(scan, vec!(Token::INT("1".to_string())));
     }
 
     #[test]
     fn float_number() {
-        let mut lexer = Lexer::new("1.0");
-        assert_eq!(lexer.next().unwrap(), Token::FLOAT("1.0".to_string()));
+        let scan = scan_generator("1.0");
+        assert_eq!(scan, vec!(Token::FLOAT("1.0".to_string())));
+    }
+
+    #[test]
+    fn plus_operand() {
+        let scan = scan_generator("+");
+        assert_eq!(scan, vec!(Token::PLUS));
+    }
+
+    #[test]
+    fn minus_operand() {
+        let scan = scan_generator("-");
+        assert_eq!(scan, vec!(Token::MINUS));
+    }
+
+    #[test]
+    fn mul_operand() {
+        let scan = scan_generator("*");
+        assert_eq!(scan, vec!(Token::MUL));
+    }
+
+    #[test]
+    fn div_operand() {
+        let scan = scan_generator("/");
+        assert_eq!(scan, vec!(Token::DIV));
+    }
+
+    #[test]
+    fn parenthesis() {
+        let scan = scan_generator("(1)");
+        assert_eq!(scan, vec!(
+            Token::LPAREN,
+            Token::INT("1".to_string()),
+            Token::RPAREN,
+        ));
+    }
+
+    #[test]
+    fn assign() {
+        let scan = scan_generator("=");
+        assert_eq!(scan, vec!(Token::ASSIGN));
     }
 
     #[test]
     fn id() {
-        let mut lexer = Lexer::new("bjørn");
-        assert_eq!(lexer.next().unwrap(), Token::ID("bjørn".to_string()));
+        let scan = scan_generator("bjørn");
+        assert_eq!(scan, vec!(Token::ID("bjørn".to_string())));
     }
 }
