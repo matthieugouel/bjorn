@@ -2,7 +2,8 @@
 name = "bjorn"
 version = "0.0.0"
 authors = ["Matthieu Gouel <matthieu.gouel@gmail.com>"]
-description = "Foolish attempt to build an interpreter."
+description = "Another side project interpreter."
+license = "MIT"
 
 [dependencies]
 clap = "~2.32.0"
