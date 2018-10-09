@@ -3,6 +3,7 @@ pub enum Token {
     INT(String),
     FLOAT(String),
     ID(String),
+    NEWLINE,
     ASSIGN,
     PLUS,
     MINUS,

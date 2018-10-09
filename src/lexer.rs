@@ -1,30 +1,38 @@
-use std::str::Chars;
+use unicode_segmentation::UnicodeSegmentation;
+use unicode_segmentation::Graphemes;
+use regex::Regex;
+
 use std::iter::Peekable;
 
 use token::Token;
 
-#[derive(Debug)]
+
+lazy_static! {
+    static ref NUMERIC: Regex = Regex::new(r"^\d").unwrap();
+    static ref ALPHABETIC: Regex = Regex::new(r"^[a-zA-Z]").unwrap();
+    static ref WORD: Regex = Regex::new(r"^\w+").unwrap();
+}
+
 pub struct Lexer<'a> {
-    input: Peekable<Chars<'a>>,
+    input: Peekable<Graphemes<'a>>,
 }
 
 impl<'a> Lexer<'a> {
 
     pub fn new(input: &'a str) -> Lexer<'a>  {
-        Lexer { input: input.chars().peekable() }
+        Lexer { input: UnicodeSegmentation::graphemes(input, true).peekable() }
     }
 
-    fn advance(&mut self) -> Option<char> {
-        self.input.next()
-    }
-
-    fn peek (&mut self) -> Option<&char> {
-        self.input.peek()
+    fn advance(&mut self) -> &str {
+        match self.input.next() {
+            Some(c) => c,
+            None => panic!("Lexical error.")
+        }
     }
 
     fn comment (&mut self) -> Option<Token> {
-        while let Some(&c) = self.peek() {
-            if c == '\n' {
+        while let Some(&c) = self.input.peek() {
+            if c == "\n" {
                 break;
             } else {
                 self.advance();
@@ -34,8 +42,8 @@ impl<'a> Lexer<'a> {
     }
 
     fn whitespace (&mut self) {
-        while let Some(&c) = self.peek() {
-            if !c.is_whitespace() {
+        while let Some(&c) = self.input.peek() {
+            if c != " " {
                 break;
             } else {
                 self.advance();
@@ -43,34 +51,34 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn number(&mut self, number: char) -> Option<Token> {
+    fn number(&mut self, number: &str) -> Option<Token> {
         let mut number = number.to_string();
-        while let Some(&c) = self.peek() {
-            if c == '.' {
-                number.push(self.advance().unwrap()); // TODO handle unwrap properly
-                while let Some(&d) = self.peek() {
-                    if !d.is_numeric() {
+        while let Some(&c) = self.input.peek() {
+            if c == "." {
+                number.push_str(self.advance());
+                while let Some(&d) = self.input.peek() {
+                    if !NUMERIC.is_match(d) {
                         break;
                     }
-                    number.push(self.advance().unwrap()); // TODO handle unwrap properly
+                    number.push_str(self.advance());
                 }
                 return Some(Token::FLOAT(number));
             }
-            if !c.is_numeric() {
+            if !NUMERIC.is_match(c) {
                 break;
             }
-            number.push(self.advance().unwrap()); // TODO handle unwrap properly
+            number.push_str(self.advance());
         }
         Some(Token::INT(number))
     }
 
-    fn id(&mut self, id: char) -> Option<Token> {
+    fn id(&mut self, id: &str) -> Option<Token> {
         let mut id = id.to_string();
-        while let Some(&c) = self.peek() {
-            if !c.is_alphanumeric() {
+        while let Some(&c) = self.input.peek() {
+            if !WORD.is_match(c) {
                 break;
             }
-            id.push(self.advance().unwrap()); // TODO handle unwrap properly
+            id.push_str(self.advance());
         }
         Some(Token::ID(id))
     }
@@ -84,17 +92,17 @@ impl<'a> Iterator for Lexer<'a> {
         self.whitespace();
 
          match self.input.next() {
-            Some('\n') => self.next(),
-            Some(c) if c.is_numeric() => self.number(c),
-            Some(c) if c.is_alphabetic() => self.id(c),
-            Some('=') => Some(Token::ASSIGN),
-            Some('+') => Some(Token::PLUS),
-            Some('-') => Some(Token::MINUS),
-            Some('*') => Some(Token::MUL),
-            Some('/') => Some(Token::DIV),
-            Some('(') => Some(Token::LPAREN),
-            Some(')') => Some(Token::RPAREN),
-            Some('#') => self.comment(),
+            Some(c) if NUMERIC.is_match(c) => self.number(c),
+            Some(c) if ALPHABETIC.is_match(c) => self.id(c),
+            Some("\n") => Some(Token::NEWLINE),
+            Some("=") => Some(Token::ASSIGN),
+            Some("+") => Some(Token::PLUS),
+            Some("-") => Some(Token::MINUS),
+            Some("*") => Some(Token::MUL),
+            Some("/") => Some(Token::DIV),
+            Some("(") => Some(Token::LPAREN),
+            Some(")") => Some(Token::RPAREN),
+            Some("#") => self.comment(),
 
             _ => None,
         }
@@ -125,7 +133,7 @@ mod tests {
     #[test]
     fn lf() {
         let scan = scan_generator("\n");
-        assert_eq!(scan, vec!());
+        assert_eq!(scan, vec!(Token::NEWLINE));
     }
 
     #[test]

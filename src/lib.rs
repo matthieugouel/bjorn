@@ -2,6 +2,10 @@
 //! Interpreter for `bjørn` language.
 //!
 
+#[macro_use] extern crate lazy_static;
+extern crate unicode_segmentation;
+extern crate regex;
+
 mod token;
 mod lexer;
 mod parser;

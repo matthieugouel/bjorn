@@ -5,10 +5,9 @@ use value::Value;
 
 use std::collections::HashMap;
 
-#[derive(Debug)]
 pub struct Interpreter<'a> {
     parser: Parser<'a>,
-    pub memory: HashMap<String, Value>,
+    memory: HashMap<String, Value>,
 }
 
 impl<'a> Interpreter<'a> {
@@ -71,9 +70,8 @@ impl<'a> Interpreter<'a> {
                 let variable_name = id.identifier().unwrap();
                 let buf = self.memory.get(&variable_name);
                 if let Some(variable_value) = buf {
-                    // This thing works thanks to the `Copy` trait
-                    // added on `Value` enum.
-                    // Not sure if it's the best way to handle this for now.
+                    // This thing works thanks to the `Copy` trait added on `Value` enum.
+                    // Not sure if it's the best way to handle this but it works for now.
                     *variable_value
                 } else {
                     panic!("Interpreter error.")

@@ -4,7 +4,6 @@ use lexer::Lexer;
 use token::Token;
 use ast:: AST;
 
-#[derive(Debug)]
 pub struct Parser<'a> {
     lexer: Peekable<Lexer<'a>>,
 }
@@ -28,6 +27,10 @@ impl<'a> Parser<'a> {
         let mut children = Vec::new();
         while *self.peek() != Token::EOF {
             children.push(Box::new(self.expression_statement()));
+            let next_token = self.process();
+            if next_token != Token::NEWLINE && next_token != Token::EOF {
+                panic!("Syntax error.")
+            }
         }
         AST::Program {children: children}
     }
