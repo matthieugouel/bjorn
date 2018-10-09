@@ -22,14 +22,15 @@ impl<'a> Parser<'a> {
         self.lexer.next().unwrap_or(Token::EOF)
     }
 
-    /// program: expression_statement
+    /// program: NEWLINE
+    ///        | expression_statement
     fn program(&mut self) -> AST {
         let mut children = Vec::new();
         while *self.peek() != Token::EOF {
-            children.push(Box::new(self.expression_statement()));
-            let next_token = self.process();
-            if next_token != Token::NEWLINE && next_token != Token::EOF {
-                panic!("Syntax error.")
+            if *self.peek() == Token::NEWLINE {
+                self.process();
+            } else {
+                children.push(Box::new(self.expression_statement()));
             }
         }
         AST::Program {children: children}
@@ -267,6 +268,22 @@ mod tests {
             AST::Program { children: vec!(
                 Box::new(AST::Variable {id: Token::ID("a".to_string())})
             )}
+        );
+    }
+
+    #[test]
+    fn one_newline() {
+        let mut parser = parser_generator("\n");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!()}
+        );
+    }
+
+    #[test]
+    fn multiple_newlines() {
+        let mut parser = parser_generator("\n\n\n");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!()}
         );
     }
 
