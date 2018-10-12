@@ -2,6 +2,7 @@
 pub enum Token {
     INT(String),
     FLOAT(String),
+    BOOL(bool),
     ID(String),
     NEWLINE,
     ASSIGN,
@@ -34,6 +35,14 @@ impl Token {
         }
         None
     }
+
+    pub fn boolean(&self) -> Option<bool> {
+        if let Token::BOOL(i) = self {
+            return Some(*i)
+        }
+        None
+    }
+
     pub fn identifier(&self) -> Option<String> {
         if let Token::ID(i) = self {
             return match i.parse::<String>() {

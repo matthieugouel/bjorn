@@ -94,6 +94,8 @@ impl<'a> Parser<'a> {
     ///     | PLUS atom
     ///     | MINUS atom
     ///     | '(' expr ')'
+    ///     | TRUE
+    ///     | FALSE
     ///     | variable
     fn atom (&mut self) -> AST {
         let token = self.process();
@@ -111,6 +113,8 @@ impl<'a> Parser<'a> {
             Token::MINUS => {
                 AST::UnaryOperation {op: token, right: Box::new(self.atom())}
             },
+            Token::BOOL(true) => AST::Boolean {token: token},
+            Token::BOOL(false) => AST::Boolean {token: token},
             Token::ID(_) => AST::Variable {id: token},
             Token::EOF => AST::Empty,
             _ => panic!("Syntax error."),
@@ -257,6 +261,26 @@ mod tests {
                     op: Token::MINUS,
                     right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())})
                 })
+            )}
+        );
+    }
+
+    #[test]
+    fn atom_boolean_true() {
+        let mut parser = parser_generator("true");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::Boolean {token: Token::BOOL(true)})
+            )}
+        );
+    }
+
+    #[test]
+    fn atom_boolean_false() {
+        let mut parser = parser_generator("false");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::Boolean {token: Token::BOOL(false)})
             )}
         );
     }

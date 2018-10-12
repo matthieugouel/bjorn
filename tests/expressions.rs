@@ -48,3 +48,30 @@ fn statements_with_unary_expressions() {
     assert_eq!(bjorn::interpret("+-2"), String::from("-2"));
     assert_eq!(bjorn::interpret("--2"), String::from("2"));
 }
+
+#[test]
+#[should_panic]
+fn statements_with_booleans() {
+
+    let operands = vec!("+", "-", "*", "/");
+
+    for op in operands {
+        // with integers
+        bjorn::interpret(&format!("1 {} true", op));
+        bjorn::interpret(&format!("1 {} false", op));
+        bjorn::interpret(&format!("true {} 1", op));
+        bjorn::interpret(&format!("false {} 1", op));
+
+        // with Floats
+        bjorn::interpret(&format!("1.0 {} true", op));
+        bjorn::interpret(&format!("1.0 {} false", op));
+        bjorn::interpret(&format!("true {} 1.0", op));
+        bjorn::interpret(&format!("false {} 1.0", op));
+
+        // with boolean
+        bjorn::interpret(&format!("true {} true", op));
+        bjorn::interpret(&format!("true {} false", op));
+        bjorn::interpret(&format!("false {} true", op));
+        bjorn::interpret(&format!("false {} false", op));
+    }
+}

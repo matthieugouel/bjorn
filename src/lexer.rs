@@ -80,7 +80,11 @@ impl<'a> Lexer<'a> {
             }
             id.push_str(self.advance());
         }
-        Some(Token::ID(id))
+        match id.as_ref() {
+            "true" => Some(Token::BOOL(true)),
+            "false" => Some(Token::BOOL(false)),
+            _ => Some(Token::ID(id))
+        }
     }
 }
 
@@ -192,6 +196,18 @@ mod tests {
     fn assign() {
         let scan = scan_generator("=");
         assert_eq!(scan, vec!(Token::ASSIGN));
+    }
+
+    #[test]
+    fn boolean_true() {
+        let scan = scan_generator("true");
+        assert_eq!(scan, vec!(Token::BOOL(true)));
+    }
+
+    #[test]
+    fn boolean_false() {
+        let scan = scan_generator("false");
+        assert_eq!(scan, vec!(Token::BOOL(false)));
     }
 
     #[test]

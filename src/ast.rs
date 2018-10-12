@@ -9,5 +9,6 @@ pub enum AST {
     UnaryOperation {op: Token, right: Box<AST>},
     IntNumber {token: Token},
     FloatNumber {token: Token},
+    Boolean {token: Token},
     Empty,
 }

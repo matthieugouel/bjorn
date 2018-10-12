@@ -66,6 +66,9 @@ impl<'a> Interpreter<'a> {
             AST::FloatNumber {token} => {
                 Value::Float(token.float().unwrap())
             },
+            AST::Boolean {token} => {
+                Value::Bool(token.boolean().unwrap())
+            },
             AST::Variable {id} => {
                 let variable_name = id.identifier().unwrap();
                 let buf = self.memory.get(&variable_name);
