@@ -89,7 +89,7 @@ fn statements_with_comparison_expressions() {
     // Not Equal
     assert_eq!(bjorn::interpret("1 != 1"), String::from("false"));
     assert_eq!(bjorn::interpret("1 != 2"), String::from("true"));
-    assert_eq!(bjorn::interpret("1.0 !== 1"), String::from("false"));
+    assert_eq!(bjorn::interpret("1.0 != 1"), String::from("false"));
     assert_eq!(bjorn::interpret("1 != 1.0"), String::from("false"));
     assert_eq!(bjorn::interpret("1.0 != 2"), String::from("true"));
     assert_eq!(bjorn::interpret("1 != 2.0"), String::from("true"));

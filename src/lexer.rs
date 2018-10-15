@@ -101,7 +101,7 @@ impl<'a> Iterator for Lexer<'a> {
             Some("\n") => Some(Token::NEWLINE),
             Some("=") => {
                 if self.input.peek() == Some(&"=") {
-                    self.next();
+                    self.advance();
                     Some(Token::EQ)
                 } else {
                     Some(Token::ASSIGN)
@@ -110,15 +110,15 @@ impl<'a> Iterator for Lexer<'a> {
             },
             Some("!") => {
                 if self.input.peek() == Some(&"=") {
-                    self.next();
+                    self.advance();
                     Some(Token::NE)
                 } else {
-                    None
+                    panic!("Lexical error.") // `!` lexeme is not supported
                 }
             }
             Some("<") => {
                 if self.input.peek() == Some(&"=") {
-                    self.next();
+                    self.advance();
                     Some(Token::LE)
                 } else {
                     Some(Token::LT)
@@ -126,7 +126,7 @@ impl<'a> Iterator for Lexer<'a> {
             },
             Some(">") => {
                 if self.input.peek() == Some(&"=") {
-                    self.next();
+                    self.advance();
                     Some(Token::GE)
                 } else {
                     Some(Token::GT)
@@ -140,7 +140,11 @@ impl<'a> Iterator for Lexer<'a> {
             Some(")") => Some(Token::RPAREN),
             Some("#") => self.comment(),
 
-            _ => None,
+            // End of file
+            None => None,
+
+            // Not supported lexeme
+            _ => panic!("Lexical error.")
         }
     }
 }
@@ -158,6 +162,13 @@ mod tests {
             scan.push(t);
         }
         scan
+    }
+
+    #[test]
+    #[should_panic]
+    fn invalid_input() {
+        // Must change if `§` is valid one day
+        scan_generator("§");
     }
 
     #[test]
