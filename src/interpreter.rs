@@ -47,6 +47,18 @@ impl<'a> Interpreter<'a> {
                     self.visit(*left) * self.visit(*right)
                 } else if op == Token::DIV {
                     self.visit(*left) / self.visit(*right)
+                } else if op == Token::EQ {
+                    Value::Bool(self.visit(*left) == self.visit(*right))
+                } else if op == Token::NE {
+                    Value::Bool(self.visit(*left) != self.visit(*right))
+                } else if op == Token::LE {
+                    Value::Bool(self.visit(*left) <= self.visit(*right))
+                } else if op == Token::GE {
+                    Value::Bool(self.visit(*left) >= self.visit(*right))
+                } else if op == Token::LT {
+                    Value::Bool(self.visit(*left) < self.visit(*right))
+                } else if op == Token::GT {
+                    Value::Bool(self.visit(*left) > self.visit(*right))
                 } else {
                     panic!("Interpreter error.")
                 }

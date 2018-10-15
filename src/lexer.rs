@@ -99,7 +99,39 @@ impl<'a> Iterator for Lexer<'a> {
             Some(c) if NUMERIC.is_match(c) => self.number(c),
             Some(c) if ALPHABETIC.is_match(c) => self.id(c),
             Some("\n") => Some(Token::NEWLINE),
-            Some("=") => Some(Token::ASSIGN),
+            Some("=") => {
+                if self.input.peek() == Some(&"=") {
+                    self.next();
+                    Some(Token::EQ)
+                } else {
+                    Some(Token::ASSIGN)
+                }
+
+            },
+            Some("!") => {
+                if self.input.peek() == Some(&"=") {
+                    self.next();
+                    Some(Token::NE)
+                } else {
+                    None
+                }
+            }
+            Some("<") => {
+                if self.input.peek() == Some(&"=") {
+                    self.next();
+                    Some(Token::LE)
+                } else {
+                    Some(Token::LT)
+                }
+            },
+            Some(">") => {
+                if self.input.peek() == Some(&"=") {
+                    self.next();
+                    Some(Token::GE)
+                } else {
+                    Some(Token::GT)
+                }
+            },
             Some("+") => Some(Token::PLUS),
             Some("-") => Some(Token::MINUS),
             Some("*") => Some(Token::MUL),
@@ -215,4 +247,41 @@ mod tests {
         let scan = scan_generator("bjørn");
         assert_eq!(scan, vec!(Token::ID("bjørn".to_string())));
     }
+
+    #[test]
+    fn comparison_eq() {
+        let scan = scan_generator("==");
+        assert_eq!(scan, vec!(Token::EQ));
+    }
+
+    #[test]
+    fn comparison_ne() {
+        let scan = scan_generator("!=");
+        assert_eq!(scan, vec!(Token::NE));
+    }
+
+    #[test]
+    fn comparison_le() {
+        let scan = scan_generator("<=");
+        assert_eq!(scan, vec!(Token::LE));
+    }
+
+    #[test]
+    fn comparison_ge() {
+        let scan = scan_generator(">=");
+        assert_eq!(scan, vec!(Token::GE));
+    }
+
+    #[test]
+    fn comparison_lt() {
+        let scan = scan_generator("<");
+        assert_eq!(scan, vec!(Token::LT));
+    }
+
+    #[test]
+    fn comparison_gt() {
+        let scan = scan_generator(">");
+        assert_eq!(scan, vec!(Token::GT));
+    }
+
 }

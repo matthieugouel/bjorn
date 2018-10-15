@@ -5,7 +5,9 @@ use std::ops::Mul;
 use std::ops::Div;
 use std::ops::Neg;
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+use std::cmp::Ordering;
+
+#[derive(Debug, Clone, Copy)]
 pub enum Value {
     Int(i32),
     Float(f64),
@@ -128,6 +130,43 @@ impl Neg for Value {
             Value::Float(a) => Value::Float(-a),
             Value::Bool(_) => panic!("Invalid operation."),
             Value::None => panic!("Invalid operation."),
+        }
+    }
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Value) -> bool {
+        match (self, other) {
+            (Value::Int(a), Value::Int(b)) => a == b,
+            (Value::Float(a), Value::Float(b)) => a == b,
+            (Value::Int(a), Value::Float(b)) => &(*a as f64) == b,
+            (Value::Float(a), Value::Int(b)) => a == &(*b as f64),
+            (Value::Bool(_), Value::Int(_)) => panic!("Invalid operation."),
+            (Value::Int(_), Value::Bool(_)) => panic!("Invalid operation."),
+            (Value::Bool(_), Value::Float(_)) => panic!("Invalid operation."),
+            (Value::Float(_), Value::Bool(_)) => panic!("Invalid operation."),
+            (Value::Bool(_), Value::Bool(_)) => panic!("Invalid operation."),
+            (Value::None, _) => panic!("Invalid operation."),
+            (_, Value::None) =>panic!("Invalid operation."),
+        }
+    }
+}
+
+impl PartialOrd for Value {
+
+    fn partial_cmp(&self, other: &Value) -> Option<Ordering> {
+        match (self, other) {
+            (Value::Int(a), Value::Int(b)) => a.partial_cmp(b),
+            (Value::Float(a), Value::Float(b)) => a.partial_cmp(b),
+            (Value::Int(a), Value::Float(b)) => (*a as f64).partial_cmp(b),
+            (Value::Float(a), Value::Int(b)) => a.partial_cmp(&(*b as f64)),
+            (Value::Bool(_), Value::Int(_)) => panic!("Invalid operation."),
+            (Value::Int(_), Value::Bool(_)) => panic!("Invalid operation."),
+            (Value::Bool(_), Value::Float(_)) => panic!("Invalid operation."),
+            (Value::Float(_), Value::Bool(_)) => panic!("Invalid operation."),
+            (Value::Bool(_), Value::Bool(_)) => panic!("Invalid operation."),
+            (Value::None, _) => panic!("Invalid operation."),
+            (_, Value::None) =>panic!("Invalid operation."),
         }
     }
 }

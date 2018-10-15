@@ -38,13 +38,37 @@ impl<'a> Parser<'a> {
 
     /// expression_statement: expr ['=' expr]
     fn expression_statement(&mut self) -> AST {
-        let mut node = self.expr();
+        let mut node = self.comparison();
         if *self.peek() == Token::ASSIGN {
             self.process();
-            let right = self.expr();
+            let right = self.comparison();
             node = AST::Assignment {
                 left: Box::new(node), right: Box::new(right)
             };
+        }
+        node
+    }
+
+    /// comparison: expr (('==' | '!=' | '<=' | '>=' | '<' | '>') expr)*
+    fn comparison(&mut self) -> AST {
+        let mut node = self.expr();
+        loop {
+            if *self.peek() == Token::EQ
+            || *self.peek() == Token::NE
+            || *self.peek() == Token::LE
+            || *self.peek() == Token::GE
+            || *self.peek() == Token::LT
+            || *self.peek() == Token::GT {
+                let op = self.process();
+                let right = self.term();
+                node = AST::BinaryOperation {
+                    left: Box::new(node),
+                    op: op,
+                    right: Box::new(right)
+                }
+            } else {
+                break;
+            }
         }
         node
     }
@@ -147,6 +171,90 @@ mod tests {
             AST::Program { children: vec!(
                 Box::new(AST::Assignment {
                     left: Box::new(AST::Variable {id: Token::ID("a".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn comparison_eq() {
+        let mut parser = parser_generator("1 == 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    op: Token::EQ,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn comparison_ne() {
+        let mut parser = parser_generator("1 != 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    op: Token::NE,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn comparison_le() {
+        let mut parser = parser_generator("1 <= 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    op: Token::LE,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn comparison_ge() {
+        let mut parser = parser_generator("1 >= 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    op: Token::GE,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn comparison_lt() {
+        let mut parser = parser_generator("1 < 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    op: Token::LT,
+                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn comparison_gt() {
+        let mut parser = parser_generator("1 > 1");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    op: Token::GT,
                     right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
                 })
             )}
