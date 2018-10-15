@@ -36,17 +36,67 @@ impl<'a> Parser<'a> {
         AST::Program {children: children}
     }
 
-    /// expression_statement: expr ['=' expr]
+    /// expression_statement: logical_or_expr ['=' logical_or_expr]
     fn expression_statement(&mut self) -> AST {
-        let mut node = self.comparison();
+        let mut node = self.logical_or_expr();
         if *self.peek() == Token::ASSIGN {
             self.process();
-            let right = self.comparison();
+            let right = self.logical_or_expr();
             node = AST::Assignment {
                 left: Box::new(node), right: Box::new(right)
             };
         }
         node
+    }
+
+    /// logical_or_expr: logical_and_expr ('or' logical_and_expr)*
+    fn logical_or_expr(&mut self) -> AST {
+        let mut node = self.logical_and_expr();
+        loop {
+            if *self.peek() == Token::OR {
+                let op = self.process();
+                let right = self.logical_and_expr();
+                node = AST::BinaryOperation {
+                    left: Box::new(node),
+                    op: op,
+                    right: Box::new(right)
+                }
+            } else {
+                break;
+            }
+        }
+        node
+    }
+
+    /// logical_and_expr: logical_not_expr ('and' logical_not_expr)*
+    fn logical_and_expr(&mut self) -> AST {
+        let mut node = self.logical_not_expr();
+        loop {
+            if *self.peek() == Token::AND {
+                let op = self.process();
+                let right = self.logical_not_expr();
+                node = AST::BinaryOperation {
+                    left: Box::new(node),
+                    op: op,
+                    right: Box::new(right)
+                }
+            } else {
+                break;
+            }
+        }
+        node
+    }
+
+    /// logical_not_expr: 'not' logical_not_expr
+    ///                 | comparison
+    fn logical_not_expr(&mut self) -> AST {
+        if *self.peek() == Token::NOT {
+            let op = self.process();
+            let right = self.logical_not_expr();
+            AST::UnaryOperation {op: op, right: Box::new(right)}
+        } else {
+            self.comparison()
+        }
     }
 
     /// comparison: expr (('==' | '!=' | '<=' | '>=' | '<' | '>') expr)*
@@ -172,6 +222,47 @@ mod tests {
                 Box::new(AST::Assignment {
                     left: Box::new(AST::Variable {id: Token::ID("a".to_string())}),
                     right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn logical_or_operation() {
+        let mut parser = parser_generator("true or true");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::Boolean {token: Token::BOOL(true)}),
+                    op: Token::OR,
+                    right: Box::new(AST::Boolean {token: Token::BOOL(true)}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn logical_and_operation() {
+        let mut parser = parser_generator("true and true");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::BinaryOperation {
+                    left: Box::new(AST::Boolean {token: Token::BOOL(true)}),
+                    op: Token::AND,
+                    right: Box::new(AST::Boolean {token: Token::BOOL(true)}),
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn logical_not_operation() {
+        let mut parser = parser_generator("not true");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::UnaryOperation {
+                    op: Token::NOT,
+                    right: Box::new(AST::Boolean {token: Token::BOOL(true)}),
                 })
             )}
         );

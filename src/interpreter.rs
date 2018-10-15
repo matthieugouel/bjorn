@@ -59,6 +59,16 @@ impl<'a> Interpreter<'a> {
                     Value::Bool(self.visit(*left) < self.visit(*right))
                 } else if op == Token::GT {
                     Value::Bool(self.visit(*left) > self.visit(*right))
+                } else if op == Token::OR {
+                    match (self.visit(*left), self.visit(*right)) {
+                        (Value::Bool(a), Value::Bool(b)) => Value::Bool(a || b),
+                        (_, _) => panic!("Invalid operation."),
+                    }
+                } else if op == Token::AND {
+                    match (self.visit(*left), self.visit(*right)) {
+                        (Value::Bool(a), Value::Bool(b)) => Value::Bool(a && b),
+                        (_, _) => panic!("Invalid operation."),
+                    }
                 } else {
                     panic!("Interpreter error.")
                 }
@@ -68,6 +78,8 @@ impl<'a> Interpreter<'a> {
                     self.visit(*right)
                 } else if op == Token::MINUS {
                     -self.visit(*right)
+                } else if op == Token::NOT {
+                    !self.visit(*right)
                 } else {
                     panic!("Interpreter error.")
                 }

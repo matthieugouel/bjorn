@@ -5,6 +5,8 @@ use std::ops::Mul;
 use std::ops::Div;
 use std::ops::Neg;
 
+use std::ops::Not;
+
 use std::cmp::Ordering;
 
 #[derive(Debug, Clone, Copy)]
@@ -50,13 +52,7 @@ impl Add for Value {
             (Value::Float(a), Value::Float(b)) => Value::Float(a + b),
             (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 + b),
             (Value::Float(a), Value::Int(b)) => Value::Float(a + b as f64),
-            (Value::Bool(_), Value::Int(_)) => panic!("Invalid operation."),
-            (Value::Int(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Float(_)) => panic!("Invalid operation."),
-            (Value::Float(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::None, _) => panic!("Invalid operation."),
-            (_, Value::None) =>panic!("Invalid operation."),
+            (_, _) => panic!("Invalid operation."),
         }
     }
 }
@@ -70,13 +66,7 @@ impl Sub for Value {
             (Value::Float(a), Value::Float(b)) => Value::Float(a - b),
             (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 - b),
             (Value::Float(a), Value::Int(b)) => Value::Float(a - b as f64),
-            (Value::Bool(_), Value::Int(_)) => panic!("Invalid operation."),
-            (Value::Int(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Float(_)) => panic!("Invalid operation."),
-            (Value::Float(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::None, _) => panic!("Invalid operation."),
-            (_, Value::None) =>panic!("Invalid operation."),
+            (_, _) => panic!("Invalid operation."),
         }
     }
 }
@@ -90,13 +80,7 @@ impl Mul for Value {
             (Value::Float(a), Value::Float(b)) => Value::Float(a * b),
             (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 * b),
             (Value::Float(a), Value::Int(b)) => Value::Float(a * b as f64),
-            (Value::Bool(_), Value::Int(_)) => panic!("Invalid operation."),
-            (Value::Int(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Float(_)) => panic!("Invalid operation."),
-            (Value::Float(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::None, _) => panic!("Invalid operation."),
-            (_, Value::None) =>panic!("Invalid operation."),
+            (_, _) => panic!("Invalid operation."),
         }
     }
 }
@@ -110,13 +94,7 @@ impl Div for Value {
             (Value::Float(a), Value::Float(b)) => Value::Float(a / b),
             (Value::Int(a), Value::Float(b)) => Value::Float(a as f64 / b),
             (Value::Float(a), Value::Int(b)) => Value::Float(a / b as f64),
-            (Value::Bool(_), Value::Int(_)) => panic!("Invalid operation."),
-            (Value::Int(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Float(_)) => panic!("Invalid operation."),
-            (Value::Float(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::None, _) => panic!("Invalid operation."),
-            (_, Value::None) =>panic!("Invalid operation."),
+            (_, _) => panic!("Invalid operation."),
         }
     }
 }
@@ -128,8 +106,7 @@ impl Neg for Value {
         match self {
             Value::Int(a) => Value::Int(-a),
             Value::Float(a) => Value::Float(-a),
-            Value::Bool(_) => panic!("Invalid operation."),
-            Value::None => panic!("Invalid operation."),
+            _ => panic!("Invalid operation."),
         }
     }
 }
@@ -141,13 +118,8 @@ impl PartialEq for Value {
             (Value::Float(a), Value::Float(b)) => a == b,
             (Value::Int(a), Value::Float(b)) => &(*a as f64) == b,
             (Value::Float(a), Value::Int(b)) => a == &(*b as f64),
-            (Value::Bool(_), Value::Int(_)) => panic!("Invalid operation."),
-            (Value::Int(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Float(_)) => panic!("Invalid operation."),
-            (Value::Float(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::None, _) => panic!("Invalid operation."),
-            (_, Value::None) =>panic!("Invalid operation."),
+            (Value::Bool(a), Value::Bool(b)) => a == b,
+            (_, _) => panic!("Invalid operation."),
         }
     }
 }
@@ -160,13 +132,18 @@ impl PartialOrd for Value {
             (Value::Float(a), Value::Float(b)) => a.partial_cmp(b),
             (Value::Int(a), Value::Float(b)) => (*a as f64).partial_cmp(b),
             (Value::Float(a), Value::Int(b)) => a.partial_cmp(&(*b as f64)),
-            (Value::Bool(_), Value::Int(_)) => panic!("Invalid operation."),
-            (Value::Int(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Float(_)) => panic!("Invalid operation."),
-            (Value::Float(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::Bool(_), Value::Bool(_)) => panic!("Invalid operation."),
-            (Value::None, _) => panic!("Invalid operation."),
-            (_, Value::None) =>panic!("Invalid operation."),
+            (_, _) => panic!("Invalid operation."),
+        }
+    }
+}
+
+impl Not for Value {
+    type Output = Value;
+
+    fn not(self) -> Value {
+        match self {
+            Value::Bool(a) => Value::Bool(!a),
+            _ => panic!("Invalid operation."),
         }
     }
 }

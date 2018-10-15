@@ -80,9 +80,13 @@ impl<'a> Lexer<'a> {
             }
             id.push_str(self.advance());
         }
+        // Reserved keywords
         match id.as_ref() {
             "true" => Some(Token::BOOL(true)),
             "false" => Some(Token::BOOL(false)),
+            "or" => Some(Token::OR),
+            "and" => Some(Token::AND),
+            "not" => Some(Token::NOT),
             _ => Some(Token::ID(id))
         }
     }
@@ -293,6 +297,24 @@ mod tests {
     fn comparison_gt() {
         let scan = scan_generator(">");
         assert_eq!(scan, vec!(Token::GT));
+    }
+
+    #[test]
+    fn logical_or_operation() {
+        let scan = scan_generator("or");
+        assert_eq!(scan, vec!(Token::OR));
+    }
+
+    #[test]
+    fn logical_and_operation() {
+        let scan = scan_generator("and");
+        assert_eq!(scan, vec!(Token::AND));
+    }
+
+    #[test]
+    fn logical_not_operation() {
+        let scan = scan_generator("not");
+        assert_eq!(scan, vec!(Token::NOT));
     }
 
 }
