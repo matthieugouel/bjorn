@@ -15,12 +15,15 @@ lazy_static! {
 
 pub struct Lexer<'a> {
     input: Peekable<Graphemes<'a>>,
+    indent_level: u8,
 }
 
 impl<'a> Lexer<'a> {
 
     pub fn new(input: &'a str) -> Lexer<'a>  {
-        Lexer { input: UnicodeSegmentation::graphemes(input, true).peekable() }
+        Lexer { input: UnicodeSegmentation::graphemes(input, true).peekable(),
+                indent_level: 0,
+            }
     }
 
     fn advance(&mut self) -> &str {
@@ -30,18 +33,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn comment (&mut self) -> Option<Token> {
-        while let Some(&c) = self.input.peek() {
-            if c == "\n" {
-                break;
-            } else {
-                self.advance();
-            }
-        }
-        self.next()
-    }
-
-    fn whitespace (&mut self) {
+    fn whitespace (&mut self)  {
         while let Some(&c) = self.input.peek() {
             if c != " " {
                 break;
@@ -49,6 +41,37 @@ impl<'a> Lexer<'a> {
                 self.advance();
             }
         }
+    }
+
+    fn indent (&mut self) -> Option<Token> {
+        // For now at least, identation is forced to 4 spaces
+        let spaces_for_indent = 4;
+
+        let mut spaces_count = 0;
+        while let Some(&c) = self.input.peek() {
+            if c != " " {
+                if spaces_count % spaces_for_indent != 0 {
+                    panic!("Indentation error.")
+                }
+                let indent_count = spaces_count / spaces_for_indent;
+                if indent_count == self.indent_level {
+                    // Same level of indentation
+                    return Some(Token::NEWLINE)
+                } else if indent_count > self.indent_level {
+                    // At least one additional identation
+                    self.indent_level +=1;
+                    return Some(Token::INDENT)
+                } else {
+                    // At least one indentation in less
+                    self.indent_level -= 1;
+                    return Some(Token::DEDENT)
+                }
+            } else {
+                spaces_count += 1;
+                self.advance();
+            }
+        }
+        Some(Token::NEWLINE)
     }
 
     fn number(&mut self, number: &str) -> Option<Token> {
@@ -90,6 +113,17 @@ impl<'a> Lexer<'a> {
             _ => Some(Token::ID(id))
         }
     }
+
+    fn comment (&mut self) -> Option<Token> {
+        while let Some(&c) = self.input.peek() {
+            if c == "\n" {
+                break;
+            } else {
+                self.advance();
+            }
+        }
+        self.next()
+    }
 }
 
 impl<'a> Iterator for Lexer<'a> {
@@ -102,7 +136,7 @@ impl<'a> Iterator for Lexer<'a> {
          match self.input.next() {
             Some(c) if NUMERIC.is_match(c) => self.number(c),
             Some(c) if ALPHABETIC.is_match(c) => self.id(c),
-            Some("\n") => Some(Token::NEWLINE),
+            Some("\n") => self.indent(),
             Some("=") => {
                 if self.input.peek() == Some(&"=") {
                     self.advance();
@@ -117,7 +151,7 @@ impl<'a> Iterator for Lexer<'a> {
                     self.advance();
                     Some(Token::NE)
                 } else {
-                    panic!("Lexical error.") // `!` lexeme is not supported
+                    panic!("Lexical error.") // Lexeme `!` is not supported
                 }
             }
             Some("<") => {
@@ -185,6 +219,20 @@ mod tests {
     fn lf() {
         let scan = scan_generator("\n");
         assert_eq!(scan, vec!(Token::NEWLINE));
+    }
+
+    #[test]
+    fn indentation() {
+        let scan = scan_generator("a\n    b\n    c\nd");
+        assert_eq!(scan, vec![
+            Token::ID(String::from("a")),
+            Token::INDENT,
+            Token::ID(String::from("b")),
+            Token::NEWLINE,
+            Token::ID(String::from("c")),
+            Token::DEDENT,
+            Token::ID(String::from("d")),
+            ])
     }
 
     #[test]

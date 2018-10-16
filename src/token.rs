@@ -5,6 +5,8 @@ pub enum Token {
     BOOL(bool),
     ID(String),
     NEWLINE,
+    INDENT,
+    DEDENT,
     OR,
     AND,
     NOT,
