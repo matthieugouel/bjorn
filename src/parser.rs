@@ -220,8 +220,8 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::Assignment {
-                    left: Box::new(AST::Variable {id: Token::ID("a".to_string())}),
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::Variable {id: Token::ID(String::from("a"))}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -274,9 +274,9 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::BinaryOperation {
-                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                     op: Token::EQ,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -288,9 +288,9 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::BinaryOperation {
-                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                     op: Token::NE,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -302,9 +302,9 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::BinaryOperation {
-                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                     op: Token::LE,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -316,9 +316,9 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::BinaryOperation {
-                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                     op: Token::GE,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -330,9 +330,9 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::BinaryOperation {
-                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                     op: Token::LT,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -344,9 +344,9 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::BinaryOperation {
-                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                     op: Token::GT,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -358,9 +358,9 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::BinaryOperation {
-                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                     op: Token::PLUS,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -372,9 +372,9 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::BinaryOperation {
-                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                     op: Token::MINUS,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -386,9 +386,9 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::BinaryOperation {
-                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                     op: Token::MUL,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -400,9 +400,9 @@ mod tests {
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
                 Box::new(AST::BinaryOperation {
-                    left: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    left: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                     op: Token::DIV,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())}),
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
                 })
             )}
         );
@@ -413,7 +413,7 @@ mod tests {
         let mut parser = parser_generator("1");
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
-                Box::new(AST::IntNumber {token: Token::INT("1".to_string())})
+                Box::new(AST::IntNumber {token: Token::INT(String::from("1"))})
             )}
         );
     }
@@ -423,7 +423,7 @@ mod tests {
         let mut parser = parser_generator("1.0");
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
-                Box::new(AST::FloatNumber {token: Token::FLOAT("1.0".to_string())})
+                Box::new(AST::FloatNumber {token: Token::FLOAT(String::from("1.0"))})
             )}
         );
     }
@@ -433,7 +433,7 @@ mod tests {
         let mut parser = parser_generator("(1)");
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
-                Box::new(AST::IntNumber {token: Token::INT("1".to_string())})
+                Box::new(AST::IntNumber {token: Token::INT(String::from("1"))})
             )}
         );
     }
@@ -445,7 +445,7 @@ mod tests {
             AST::Program { children: vec!(
                 Box::new(AST::UnaryOperation {
                     op: Token::PLUS,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())})
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))})
                 })
             )}
         );
@@ -458,7 +458,7 @@ mod tests {
             AST::Program { children: vec!(
                 Box::new(AST::UnaryOperation {
                     op: Token::MINUS,
-                    right: Box::new(AST::IntNumber {token: Token::INT("1".to_string())})
+                    right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))})
                 })
             )}
         );
@@ -489,7 +489,7 @@ mod tests {
         let mut parser = parser_generator("a");
         assert_eq!(parser.parse(),
             AST::Program { children: vec!(
-                Box::new(AST::Variable {id: Token::ID("a".to_string())})
+                Box::new(AST::Variable {id: Token::ID(String::from("a"))})
             )}
         );
     }

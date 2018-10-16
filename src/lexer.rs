@@ -244,13 +244,13 @@ mod tests {
     #[test]
     fn integer_number() {
         let scan = scan_generator("1");
-        assert_eq!(scan, vec!(Token::INT("1".to_string())));
+        assert_eq!(scan, vec!(Token::INT(String::from("1"))));
     }
 
     #[test]
     fn float_number() {
         let scan = scan_generator("1.0");
-        assert_eq!(scan, vec!(Token::FLOAT("1.0".to_string())));
+        assert_eq!(scan, vec!(Token::FLOAT(String::from("1.0"))));
     }
 
     #[test]
@@ -282,7 +282,7 @@ mod tests {
         let scan = scan_generator("(1)");
         assert_eq!(scan, vec!(
             Token::LPAREN,
-            Token::INT("1".to_string()),
+            Token::INT(String::from("1")),
             Token::RPAREN,
         ));
     }
@@ -308,7 +308,7 @@ mod tests {
     #[test]
     fn id() {
         let scan = scan_generator("bjørn");
-        assert_eq!(scan, vec!(Token::ID("bjørn".to_string())));
+        assert_eq!(scan, vec!(Token::ID(String::from("bjørn"))));
     }
 
     #[test]
