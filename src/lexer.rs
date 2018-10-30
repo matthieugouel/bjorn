@@ -43,7 +43,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn indent (&mut self) -> Option<Token> {
+    fn indent (&mut self) -> Option<Vec<Token>> {
         // For now at least, identation is forced to 4 spaces
         let spaces_for_indent = 4;
 
@@ -56,25 +56,34 @@ impl<'a> Lexer<'a> {
                 let indent_count = spaces_count / spaces_for_indent;
                 if indent_count == self.indent_level {
                     // Same level of indentation
-                    return Some(Token::NEWLINE)
+                    return Some(vec![Token::NEWLINE])
                 } else if indent_count > self.indent_level {
                     // At least one additional identation
-                    self.indent_level +=1;
-                    return Some(Token::INDENT)
+                    let mut indent_array: Vec<Token> = vec![Token::NEWLINE];
+                    for _ in 0..(indent_count - self.indent_level) {
+                        self.indent_level += 1;
+                        indent_array.push(Token::INDENT);
+                    }
+                    return Some(indent_array)
                 } else {
                     // At least one indentation in less
-                    self.indent_level -= 1;
-                    return Some(Token::DEDENT)
+                    let mut dedent_array: Vec<Token> = vec![];
+                    for _ in 0..(self.indent_level - indent_count) {
+                        self.indent_level -= 1;
+                        dedent_array.push(Token::DEDENT);
+                    }
+                    dedent_array.push(Token::NEWLINE);
+                    return Some(dedent_array)
                 }
             } else {
                 spaces_count += 1;
                 self.advance();
             }
         }
-        Some(Token::NEWLINE)
+        Some(vec![Token::NEWLINE])
     }
 
-    fn number(&mut self, number: &str) -> Option<Token> {
+    fn number(&mut self, number: &str) -> Option<Vec<Token>> {
         let mut number = number.to_string();
         while let Some(&c) = self.input.peek() {
             if c == "." {
@@ -85,17 +94,17 @@ impl<'a> Lexer<'a> {
                     }
                     number.push_str(self.advance());
                 }
-                return Some(Token::FLOAT(number));
+                return Some(vec![Token::FLOAT(number)]);
             }
             if !NUMERIC.is_match(c) {
                 break;
             }
             number.push_str(self.advance());
         }
-        Some(Token::INT(number))
+        Some(vec![Token::INT(number)])
     }
 
-    fn id(&mut self, id: &str) -> Option<Token> {
+    fn id(&mut self, id: &str) -> Option<Vec<Token>> {
         let mut id = id.to_string();
         while let Some(&c) = self.input.peek() {
             if !WORD.is_match(c) {
@@ -105,16 +114,16 @@ impl<'a> Lexer<'a> {
         }
         // Reserved keywords
         match id.as_ref() {
-            "true" => Some(Token::BOOL(true)),
-            "false" => Some(Token::BOOL(false)),
-            "or" => Some(Token::OR),
-            "and" => Some(Token::AND),
-            "not" => Some(Token::NOT),
-            _ => Some(Token::ID(id))
+            "true" => Some(vec![Token::BOOL(true)]),
+            "false" => Some(vec![Token::BOOL(false)]),
+            "or" => Some(vec![Token::OR]),
+            "and" => Some(vec![Token::AND]),
+            "not" => Some(vec![Token::NOT]),
+            _ => Some(vec![Token::ID(id)])
         }
     }
 
-    fn comment (&mut self) -> Option<Token> {
+    fn comment (&mut self) -> Option<Vec<Token>> {
         while let Some(&c) = self.input.peek() {
             if c == "\n" {
                 break;
@@ -127,9 +136,9 @@ impl<'a> Lexer<'a> {
 }
 
 impl<'a> Iterator for Lexer<'a> {
-    type Item = Token;
+    type Item = Vec<Token>;
 
-    fn next(&mut self) -> Option<Token> {
+    fn next(&mut self) -> Option<Self::Item> {
 
         self.whitespace();
 
@@ -140,16 +149,16 @@ impl<'a> Iterator for Lexer<'a> {
             Some("=") => {
                 if self.input.peek() == Some(&"=") {
                     self.advance();
-                    Some(Token::EQ)
+                    Some(vec![Token::EQ])
                 } else {
-                    Some(Token::ASSIGN)
+                    Some(vec![Token::ASSIGN])
                 }
 
             },
             Some("!") => {
                 if self.input.peek() == Some(&"=") {
                     self.advance();
-                    Some(Token::NE)
+                    Some(vec![Token::NE])
                 } else {
                     panic!("Lexical error.") // Lexeme `!` is not supported
                 }
@@ -157,25 +166,25 @@ impl<'a> Iterator for Lexer<'a> {
             Some("<") => {
                 if self.input.peek() == Some(&"=") {
                     self.advance();
-                    Some(Token::LE)
+                    Some(vec![Token::LE])
                 } else {
-                    Some(Token::LT)
+                    Some(vec![Token::LT])
                 }
             },
             Some(">") => {
                 if self.input.peek() == Some(&"=") {
                     self.advance();
-                    Some(Token::GE)
+                    Some(vec![Token::GE])
                 } else {
-                    Some(Token::GT)
+                    Some(vec![Token::GT])
                 }
             },
-            Some("+") => Some(Token::PLUS),
-            Some("-") => Some(Token::MINUS),
-            Some("*") => Some(Token::MUL),
-            Some("/") => Some(Token::DIV),
-            Some("(") => Some(Token::LPAREN),
-            Some(")") => Some(Token::RPAREN),
+            Some("+") => Some(vec![Token::PLUS]),
+            Some("-") => Some(vec![Token::MINUS]),
+            Some("*") => Some(vec![Token::MUL]),
+            Some("/") => Some(vec![Token::DIV]),
+            Some("(") => Some(vec![Token::LPAREN]),
+            Some(")") => Some(vec![Token::RPAREN]),
             Some("#") => self.comment(),
 
             // End of file
@@ -186,6 +195,7 @@ impl<'a> Iterator for Lexer<'a> {
         }
     }
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -199,7 +209,7 @@ mod tests {
         for t in lexer {
             scan.push(t);
         }
-        scan
+        scan.into_iter().flatten().collect::<Vec<Token>>()
     }
 
     #[test]
@@ -226,11 +236,31 @@ mod tests {
         let scan = scan_generator("a\n    b\n    c\nd");
         assert_eq!(scan, vec![
             Token::ID(String::from("a")),
+            Token::NEWLINE,
             Token::INDENT,
             Token::ID(String::from("b")),
             Token::NEWLINE,
             Token::ID(String::from("c")),
             Token::DEDENT,
+            Token::NEWLINE,
+            Token::ID(String::from("d")),
+            ])
+    }
+
+    #[test]
+    fn indentation_multiple() {
+        let scan = scan_generator("a\n    b\n        c\nd");
+        assert_eq!(scan, vec![
+            Token::ID(String::from("a")),
+            Token::NEWLINE,
+            Token::INDENT,
+            Token::ID(String::from("b")),
+            Token::NEWLINE,
+            Token::INDENT,
+            Token::ID(String::from("c")),
+            Token::DEDENT,
+            Token::DEDENT,
+            Token::NEWLINE,
             Token::ID(String::from("d")),
             ])
     }

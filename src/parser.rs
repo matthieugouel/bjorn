@@ -1,21 +1,22 @@
 use std::iter::Peekable;
+use std::iter::Flatten;
 
 use lexer::Lexer;
 use token::Token;
 use ast:: AST;
 
 pub struct Parser<'a> {
-    lexer: Peekable<Lexer<'a>>,
+    lexer: Peekable<Flatten<Lexer<'a>>>,
 }
 
 impl<'a> Parser<'a> {
 
     pub fn new(lexer: Lexer<'a>) -> Parser<'a>  {
-        Parser { lexer: lexer.peekable() }
+        Parser { lexer: lexer.flatten().peekable()}
     }
 
     fn peek(&mut self) -> &Token {
-        self.lexer.peek().unwrap_or(&Token::EOF)
+        self.lexer.peek().unwrap_or(&&Token::EOF)
     }
 
     fn process(&mut self) -> Token {

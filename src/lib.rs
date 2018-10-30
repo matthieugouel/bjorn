@@ -34,7 +34,7 @@ pub fn scan(input: &str) -> Vec<token::Token> {
     for t in lexer {
         scan.push(t);
     }
-    scan
+    scan.into_iter().flatten().collect::<Vec<token::Token>>()
 }
 
 ///
