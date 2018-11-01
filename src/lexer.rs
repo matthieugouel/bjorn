@@ -54,12 +54,12 @@ impl<'a> Lexer<'a> {
                     panic!("Indentation error.")
                 }
                 let indent_count = spaces_count / spaces_for_indent;
+                let mut indent_array: Vec<Token> = vec![Token::NEWLINE];
                 if indent_count == self.indent_level {
                     // Same level of indentation
-                    return Some(vec![Token::NEWLINE])
+                    return Some(indent_array)
                 } else if indent_count > self.indent_level {
                     // At least one additional identation
-                    let mut indent_array: Vec<Token> = vec![Token::NEWLINE];
                     for _ in 0..(indent_count - self.indent_level) {
                         self.indent_level += 1;
                         indent_array.push(Token::INDENT);
@@ -67,20 +67,24 @@ impl<'a> Lexer<'a> {
                     return Some(indent_array)
                 } else {
                     // At least one indentation in less
-                    let mut dedent_array: Vec<Token> = vec![];
                     for _ in 0..(self.indent_level - indent_count) {
                         self.indent_level -= 1;
-                        dedent_array.push(Token::DEDENT);
+                        indent_array.push(Token::DEDENT);
                     }
-                    dedent_array.push(Token::NEWLINE);
-                    return Some(dedent_array)
+                    return Some(indent_array)
                 }
             } else {
                 spaces_count += 1;
                 self.advance();
             }
         }
-        Some(vec![Token::NEWLINE])
+        // In the end of the program,
+        // dedent everything if the indent level is not equal to zero.
+        let mut dedent_ending_array: Vec<Token> = vec![Token::NEWLINE];
+        for _ in 0..self.indent_level {
+            dedent_ending_array.push(Token::DEDENT);
+        }
+        Some(dedent_ending_array)
     }
 
     fn number(&mut self, number: &str) -> Option<Vec<Token>> {
@@ -119,6 +123,9 @@ impl<'a> Lexer<'a> {
             "or" => Some(vec![Token::OR]),
             "and" => Some(vec![Token::AND]),
             "not" => Some(vec![Token::NOT]),
+            "if" => Some(vec![Token::IF]),
+            "else" => Some(vec![Token::ELSE]),
+            "while" => Some(vec![Token::WHILE]),
             _ => Some(vec![Token::ID(id)])
         }
     }
@@ -185,6 +192,7 @@ impl<'a> Iterator for Lexer<'a> {
             Some("/") => Some(vec![Token::DIV]),
             Some("(") => Some(vec![Token::LPAREN]),
             Some(")") => Some(vec![Token::RPAREN]),
+            Some(":") => Some(vec![Token::COLON]),
             Some("#") => self.comment(),
 
             // End of file
@@ -241,8 +249,8 @@ mod tests {
             Token::ID(String::from("b")),
             Token::NEWLINE,
             Token::ID(String::from("c")),
-            Token::DEDENT,
             Token::NEWLINE,
+            Token::DEDENT,
             Token::ID(String::from("d")),
             ])
     }
@@ -258,9 +266,9 @@ mod tests {
             Token::NEWLINE,
             Token::INDENT,
             Token::ID(String::from("c")),
-            Token::DEDENT,
-            Token::DEDENT,
             Token::NEWLINE,
+            Token::DEDENT,
+            Token::DEDENT,
             Token::ID(String::from("d")),
             ])
     }
@@ -315,6 +323,12 @@ mod tests {
             Token::INT(String::from("1")),
             Token::RPAREN,
         ));
+    }
+
+    #[test]
+    fn colon() {
+        let scan = scan_generator(":");
+        assert_eq!(scan, vec!(Token::COLON));
     }
 
     #[test]
@@ -395,4 +409,22 @@ mod tests {
         assert_eq!(scan, vec!(Token::NOT));
     }
 
+
+    #[test]
+    fn if_keyword() {
+        let scan = scan_generator("if");
+        assert_eq!(scan, vec!(Token::IF));
+    }
+
+    #[test]
+    fn else_keyword() {
+        let scan = scan_generator("else");
+        assert_eq!(scan, vec!(Token::ELSE));
+    }
+
+    #[test]
+    fn while_keyword() {
+        let scan = scan_generator("while");
+        assert_eq!(scan, vec!(Token::WHILE));
+    }
 }

@@ -27,7 +27,40 @@ impl<'a> Interpreter<'a> {
                     result = self.visit(*child);
                 }
                 result
-            }
+            },
+            AST::Bloc {children} => {
+                let mut result = Value::None;
+                for child in children {
+                    self.visit(*child);
+                }
+                result
+            },
+            AST::IfStatement {if_compound, else_if_compounds, else_compound} => {
+                let (if_condition, if_bloc) = if_compound;
+                if self.visit(*if_condition.clone()) == Value::Bool(true) {
+                    self.visit(*if_bloc.clone());
+                    Value::None
+                } else {
+                    for else_if_compound in &else_if_compounds {
+                        let (else_if_condition, else_if_bloc) = else_if_compound;
+                        if self.visit(*else_if_condition.clone()) == Value::Bool(true) {
+                            self.visit(*else_if_bloc.clone());
+                            return Value::None
+                        }
+                    }
+                    self.visit(*else_compound)
+                }
+            },
+            AST::WhileStatement {condition, bloc} => {
+                loop {
+                    if self.visit(*condition.clone()) == Value::Bool(true) {
+                        self.visit(*bloc.clone());
+                    } else {
+                        break;
+                    }
+                }
+                Value::None
+            },
             AST::Assignment {left, right} => {
                 let variable_name = match *left {
                     AST::Variable{id} => id.identifier().unwrap(),
@@ -83,7 +116,7 @@ impl<'a> Interpreter<'a> {
                 } else {
                     panic!("Interpreter error.")
                 }
-            }
+            },
             AST::IntNumber {token} => {
                 Value::Int(token.integer().unwrap())
             },
@@ -103,7 +136,7 @@ impl<'a> Interpreter<'a> {
                 } else {
                     panic!("Interpreter error.")
                 }
-            }
+            },
             _ => Value::None
         }
     }

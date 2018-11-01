@@ -1,8 +1,21 @@
 # Bjørn Grammar
 
 ```
-program: NEWLINE
-       | expression_statement
+program: (NEWLINE | statement)* EOF
+
+statement: simple_statement
+         | compound_statement
+
+simple_statement: expression_statement NEWLINE
+
+compound_statement: if_statement
+                  | while_statement
+
+if_statement: 'if' logical_or_expr ':' bloc ('else' 'if' logical_or_expr ':' bloc)* ['else' ':' bloc]
+
+while_statement: 'while' logical_or_expr ':' bloc
+
+bloc: NEWLINE INDENT statement+ DEDENT
 
 expression_statement: logical_or_expr ['=' logical_or_expr]
 

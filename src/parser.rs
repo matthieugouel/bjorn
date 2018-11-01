@@ -16,32 +16,130 @@ impl<'a> Parser<'a> {
     }
 
     fn peek(&mut self) -> &Token {
-        self.lexer.peek().unwrap_or(&&Token::EOF)
+        self.lexer.peek().unwrap_or(&Token::EOF)
     }
 
-    fn process(&mut self) -> Token {
-        self.lexer.next().unwrap_or(Token::EOF)
+    fn process(&mut self, verification: Option<Token>) -> Token {
+        let next = self.lexer.next().unwrap_or(Token::EOF);
+        match verification {
+            Some(verification) => {
+                if next == verification {
+                    next
+                } else {
+                    panic!("Parser error.")
+                }
+            },
+            None => {
+                next
+            }
+        }
     }
 
-    /// program: NEWLINE
-    ///        | expression_statement
+    /// program: (NEWLINE | statement)* EOF
     fn program(&mut self) -> AST {
         let mut children = Vec::new();
         while *self.peek() != Token::EOF {
             if *self.peek() == Token::NEWLINE {
-                self.process();
+                self.process(Some(Token::NEWLINE));
             } else {
-                children.push(Box::new(self.expression_statement()));
+                children.push(Box::new(self.statement()));
             }
         }
         AST::Program {children: children}
+    }
+
+    /// statement: compound_statement
+    ///          | simple_statement
+    fn statement(&mut self) -> AST {
+        if *self.peek() == Token::IF
+        || *self.peek() == Token::WHILE {
+            self.compound_statement()
+        } else {
+            self.simple_statement()
+        }
+    }
+
+    /// compound_statement: if_statement
+    ///                   | while_statement
+    fn compound_statement(&mut self) -> AST {
+        if *self.peek() == Token::IF {
+            self.if_statement()
+        } else if *self.peek() == Token::WHILE {
+            self.while_statement()
+        } else {
+            panic!("Parser error.")
+        }
+    }
+
+    /// if_statement: 'if' logical_or_expr ':' bloc ('else' 'if' logical_or_expr ':' bloc)* ['else' ':' bloc]
+    fn if_statement(&mut self) -> AST {
+        self.process(Some(Token::IF));
+        let if_condition = self.logical_or_expr();
+        self.process(Some(Token::COLON));
+        let if_bloc = self.bloc();
+
+        let mut else_if_compounds: Vec<(Box<AST>, Box<AST>)> = Vec::new();
+        let mut else_compound: Box<AST> = Box::new(AST::Empty);
+        while *self.peek() == Token::ELSE {
+            self.process(Some(Token::ELSE));
+            if *self.peek() == Token::IF {
+                self.process(Some(Token::IF));
+                let else_if_condition = self.logical_or_expr();
+                self.process(Some(Token::COLON));
+                let else_if_bloc = self.bloc();
+                else_if_compounds.push(
+                    (Box::new(else_if_condition), Box::new(else_if_bloc))
+                );
+            } else {
+                self.process(Some(Token::COLON));
+                else_compound = Box::new(self.bloc());
+            }
+        }
+        AST::IfStatement {
+            if_compound: (Box::new(if_condition), Box::new(if_bloc)),
+            else_if_compounds: else_if_compounds,
+            else_compound: else_compound,
+        }
+    }
+
+    /// while_statement: 'while' logical_or_expr ':' bloc
+    fn while_statement(&mut self) -> AST {
+        self.process(Some(Token::WHILE));
+        let while_condition = self.logical_or_expr();
+        self.process(Some(Token::COLON));
+        let while_bloc = self.bloc();
+        AST::WhileStatement {
+            condition: Box::new(while_condition),
+            bloc: Box::new(while_bloc),
+        }
+    }
+
+    /// bloc: NEWLINE INDENT statement+ DEDENT
+    fn bloc(&mut self) -> AST {
+        self.process(Some(Token::NEWLINE));
+        self.process(Some(Token::INDENT));
+        let mut children = Vec::new();
+        while *self.peek() != Token::DEDENT {
+            children.push(Box::new(self.statement()));
+        }
+        self.process(Some(Token::DEDENT));
+        AST::Bloc {children:children}
+    }
+
+    /// simple_statement: expression_statement NEWLINE
+    fn simple_statement(&mut self) -> AST {
+        let node = self.expression_statement();
+        if *self.peek() != Token::EOF {
+            self.process(Some(Token::NEWLINE));
+        }
+        node
     }
 
     /// expression_statement: logical_or_expr ['=' logical_or_expr]
     fn expression_statement(&mut self) -> AST {
         let mut node = self.logical_or_expr();
         if *self.peek() == Token::ASSIGN {
-            self.process();
+            self.process(Some(Token::ASSIGN));
             let right = self.logical_or_expr();
             node = AST::Assignment {
                 left: Box::new(node), right: Box::new(right)
@@ -55,7 +153,7 @@ impl<'a> Parser<'a> {
         let mut node = self.logical_and_expr();
         loop {
             if *self.peek() == Token::OR {
-                let op = self.process();
+                let op = self.process(Some(Token::OR));
                 let right = self.logical_and_expr();
                 node = AST::BinaryOperation {
                     left: Box::new(node),
@@ -74,7 +172,7 @@ impl<'a> Parser<'a> {
         let mut node = self.logical_not_expr();
         loop {
             if *self.peek() == Token::AND {
-                let op = self.process();
+                let op = self.process(Some(Token::AND));
                 let right = self.logical_not_expr();
                 node = AST::BinaryOperation {
                     left: Box::new(node),
@@ -92,7 +190,7 @@ impl<'a> Parser<'a> {
     ///                 | comparison
     fn logical_not_expr(&mut self) -> AST {
         if *self.peek() == Token::NOT {
-            let op = self.process();
+            let op = self.process(Some(Token::NOT));
             let right = self.logical_not_expr();
             AST::UnaryOperation {op: op, right: Box::new(right)}
         } else {
@@ -104,21 +202,27 @@ impl<'a> Parser<'a> {
     fn comparison(&mut self) -> AST {
         let mut node = self.expr();
         loop {
-            if *self.peek() == Token::EQ
-            || *self.peek() == Token::NE
-            || *self.peek() == Token::LE
-            || *self.peek() == Token::GE
-            || *self.peek() == Token::LT
-            || *self.peek() == Token::GT {
-                let op = self.process();
-                let right = self.term();
-                node = AST::BinaryOperation {
-                    left: Box::new(node),
-                    op: op,
-                    right: Box::new(right)
-                }
+            let op: Token;
+            if *self.peek() == Token::EQ {
+                op = self.process(Some(Token::EQ));
+            } else if *self.peek() == Token::NE {
+                op = self.process(Some(Token::NE));
+            } else if *self.peek() == Token::LE {
+                op = self.process(Some(Token::LE));
+            } else if *self.peek() == Token::GE {
+                op = self.process(Some(Token::GE));
+            } else if *self.peek() == Token::LT {
+                op = self.process(Some(Token::LT));
+            } else if *self.peek() == Token::GT {
+                op = self.process(Some(Token::GT));
             } else {
                 break;
+            }
+            let right = self.term();
+            node = AST::BinaryOperation {
+                left: Box::new(node),
+                op: op,
+                right: Box::new(right)
             }
         }
         node
@@ -128,17 +232,19 @@ impl<'a> Parser<'a> {
     fn expr(&mut self) -> AST {
         let mut node = self.term();
         loop {
-            if *self.peek() == Token::PLUS
-            || *self.peek() == Token::MINUS {
-                let op = self.process();
-                let right = self.term();
-                node = AST::BinaryOperation {
-                    left: Box::new(node),
-                    op: op,
-                    right: Box::new(right)
-                }
+            let op: Token;
+            if *self.peek() == Token::PLUS {
+                op = self.process(Some(Token::PLUS));
+            } else if *self.peek() == Token::MINUS {
+                op = self.process(Some(Token::MINUS));
             } else {
                 break;
+            }
+            let right = self.term();
+            node = AST::BinaryOperation {
+                left: Box::new(node),
+                op: op,
+                right: Box::new(right)
             }
         }
         node
@@ -148,17 +254,19 @@ impl<'a> Parser<'a> {
     fn term(&mut self) -> AST {
         let mut node = self.atom();
         loop {
-            if *self.peek() == Token::MUL
-            || *self.peek() == Token::DIV {
-                let op = self.process();
-                let right = self.atom();
-                node = AST::BinaryOperation {
-                    left: Box::new(node),
-                    op: op,
-                    right: Box::new(right)
-                }
+            let op: Token;
+            if *self.peek() == Token::MUL {
+                op = self.process(Some(Token::MUL));
+            } else if *self.peek() == Token::DIV {
+                op = self.process(Some(Token::DIV));
             } else {
                 break;
+            }
+            let right = self.atom();
+            node = AST::BinaryOperation {
+                left: Box::new(node),
+                op: op,
+                right: Box::new(right)
             }
         }
         node
@@ -173,13 +281,13 @@ impl<'a> Parser<'a> {
     ///     | FALSE
     ///     | variable
     fn atom (&mut self) -> AST {
-        let token = self.process();
+        let token = self.process(None);
         match token {
             Token::INT(_) => AST::IntNumber {token: token},
             Token::FLOAT(_) => AST::FloatNumber {token: token},
             Token::LPAREN => {
                 let expr = self.expr();
-                self.process();
+                self.process(Some(Token::RPAREN));
                 expr
             },
             Token::PLUS => {
@@ -188,8 +296,7 @@ impl<'a> Parser<'a> {
             Token::MINUS => {
                 AST::UnaryOperation {op: token, right: Box::new(self.atom())}
             },
-            Token::BOOL(true) => AST::Boolean {token: token},
-            Token::BOOL(false) => AST::Boolean {token: token},
+            Token::BOOL(value) => AST::Boolean {token: Token::BOOL(value)},
             Token::ID(_) => AST::Variable {id: token},
             Token::EOF => AST::Empty,
             _ => panic!("Syntax error."),
@@ -213,6 +320,48 @@ mod tests {
         Parser::new(
             Lexer::new(input)
         )
+    }
+
+    #[test]
+    fn while_statement() {
+        let mut parser = parser_generator("while true:\n    1\n");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec![
+                Box::new(AST::WhileStatement {
+                    condition: Box::new(AST::Boolean { token: Token::BOOL(true) }),
+                    bloc: Box::new(AST::Bloc { children:
+                        vec![Box::new(AST::IntNumber { token: Token::INT(String::from("1")) })]
+                    })
+                })]
+            }
+        );
+    }
+
+    #[test]
+    fn if_statement() {
+        let mut parser = parser_generator("if true:\n    a = 1\nelse:\n    a = 2\n");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::IfStatement {
+                    if_compound: (
+                        Box::new(AST::Boolean {token: Token::BOOL(true)}),
+                        Box::new(AST::Bloc {children:
+                            vec![Box::new(AST::Assignment {
+                                left: Box::new(AST::Variable {id: Token::ID(String::from("a"))}),
+                                right: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
+                            })]
+                        })
+                    ),
+                    else_if_compounds: Vec::new(),
+                    else_compound: Box::new(AST::Bloc {children:
+                        vec![Box::new(AST::Assignment {
+                            left: Box::new(AST::Variable {id: Token::ID(String::from("a"))}),
+                            right: Box::new(AST::IntNumber {token: Token::INT(String::from("2"))}),
+                        })]
+                    })
+                })
+            )}
+        );
     }
 
     #[test]
