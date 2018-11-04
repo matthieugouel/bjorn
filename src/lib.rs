@@ -10,6 +10,7 @@ mod token;
 mod lexer;
 mod parser;
 mod ast;
+mod memory;
 mod interpreter;
 mod value;
 

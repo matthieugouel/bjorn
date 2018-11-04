@@ -1,19 +1,21 @@
+use std::collections::HashMap;
+
 use token::Token;
 use parser::Parser;
 use ast::AST;
+use memory::Memory;
 use value::Value;
 
-use std::collections::HashMap;
 
 pub struct Interpreter<'a> {
     parser: Parser<'a>,
-    memory: HashMap<String, Value>,
+    memory: Memory,
 }
 
 impl<'a> Interpreter<'a> {
 
     pub fn new(parser: Parser<'a>) -> Interpreter<'a>  {
-        Interpreter { parser: parser, memory: HashMap::new() }
+        Interpreter { parser: parser, memory: Memory::new(HashMap::new()) }
     }
 
     fn visit(&mut self, tree: AST) -> Value {
@@ -128,7 +130,7 @@ impl<'a> Interpreter<'a> {
             },
             AST::Variable {id} => {
                 let variable_name = id.identifier().unwrap();
-                let buf = self.memory.get(&variable_name);
+                let buf = self.memory.get(variable_name);
                 if let Some(variable_value) = buf {
                     // This thing works thanks to the `Copy` trait added on `Value` enum.
                     // Not sure if it's the best way to handle this but it works for now.
