@@ -12,7 +12,7 @@ pub struct Parser<'a> {
 impl<'a> Parser<'a> {
 
     pub fn new(lexer: Lexer<'a>) -> Parser<'a>  {
-        Parser { lexer: lexer.flatten().peekable()}
+        Parser {lexer: lexer.flatten().peekable()}
     }
 
     fn peek(&mut self) -> &Token {
@@ -52,7 +52,8 @@ impl<'a> Parser<'a> {
     ///          | simple_statement
     fn statement(&mut self) -> AST {
         if *self.peek() == Token::IF
-        || *self.peek() == Token::WHILE {
+        || *self.peek() == Token::WHILE
+        || *self.peek() == Token::DEF {
             self.compound_statement()
         } else {
             self.simple_statement()
@@ -61,11 +62,14 @@ impl<'a> Parser<'a> {
 
     /// compound_statement: if_statement
     ///                   | while_statement
+    ///                   | function_declaration
     fn compound_statement(&mut self) -> AST {
         if *self.peek() == Token::IF {
             self.if_statement()
         } else if *self.peek() == Token::WHILE {
             self.while_statement()
+        } else if *self.peek() == Token::DEF {
+            self.function_declaration()
         } else {
             panic!("Parser error.")
         }
@@ -114,6 +118,42 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// function_declaration: 'def' ID parameters ':' suite
+    fn function_declaration(&mut self) -> AST {
+        self.process(Some(Token::DEF));
+        let identifier =  self.process(None);
+        match identifier {
+            Token::ID(_) => {},
+            _ => panic!("Parser error.")
+        };
+        let parameters = self.parameters();
+        self.process(Some(Token::COLON));
+        let body = self.bloc();
+
+        AST::FunctionDeclaration {
+            identifier: identifier,
+            parameters: parameters,
+            body: Box::new(body),
+        }
+    }
+
+    /// parameters: '(' [logical_or_expr (',' logical_or_expr)*] ')'
+    fn parameters(&mut self) -> Vec<AST> {
+        self.process(Some(Token::LPAREN));
+        let mut parameters = Vec::new();
+        while *self.peek() != Token::RPAREN {
+            parameters.push(AST::Parameter {parameter: Box::new(self.logical_or_expr())});
+            if *self.peek() == Token::COMMA {
+                self.process(Some(Token::COMMA));
+            }
+        }
+        self.process(Some(Token::RPAREN));
+        if parameters.is_empty() {
+            parameters.push(AST::Empty)
+        }
+        parameters
+    }
+
     /// bloc: NEWLINE INDENT statement+ DEDENT
     fn bloc(&mut self) -> AST {
         self.process(Some(Token::NEWLINE));
@@ -128,11 +168,23 @@ impl<'a> Parser<'a> {
 
     /// simple_statement: expression_statement NEWLINE
     fn simple_statement(&mut self) -> AST {
-        let node = self.expression_statement();
+        let node;
+        if *self.peek() == Token::RETURN {
+            node = self.return_statement();
+        } else {
+            node = self.expression_statement();
+        }
+
         if *self.peek() != Token::EOF {
             self.process(Some(Token::NEWLINE));
         }
         node
+    }
+
+    /// return_statement: 'return' logical_or_expr
+    fn return_statement(&mut self) -> AST {
+        self.process(Some(Token::RETURN));
+        AST::ReturnStatement {expression: Box::new(self.logical_or_expr())}
     }
 
     /// expression_statement: logical_or_expr ['=' logical_or_expr]
@@ -279,7 +331,7 @@ impl<'a> Parser<'a> {
     ///     | '(' expr ')'
     ///     | TRUE
     ///     | FALSE
-    ///     | variable
+    ///     | ID [parameters]
     fn atom (&mut self) -> AST {
         let token = self.process(None);
         match token {
@@ -297,7 +349,14 @@ impl<'a> Parser<'a> {
                 AST::UnaryOperation {op: token, right: Box::new(self.atom())}
             },
             Token::BOOL(value) => AST::Boolean {token: Token::BOOL(value)},
-            Token::ID(_) => AST::Variable {id: token},
+            Token::ID(_) => {
+                if *self.peek() == Token::LPAREN {
+                    let arguments = self.parameters();
+                    AST::FunctionCall {identifier: token, arguments: arguments}
+                } else {
+                    AST::Variable {id: token}
+                }
+            },
             Token::EOF => AST::Empty,
             _ => panic!("Syntax error."),
         }
@@ -320,6 +379,51 @@ mod tests {
         Parser::new(
             Lexer::new(input)
         )
+    }
+
+    #[test]
+    fn function_call() {
+        let mut parser = parser_generator("test(1)");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::FunctionCall {
+                    identifier: {Token::ID(String::from("test"))},
+                    arguments: vec![AST::Parameter {
+                        parameter: Box::new(AST::IntNumber {token: Token::INT(String::from("1"))}),
+                    }]
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn function_declaration() {
+        let mut parser = parser_generator("def test():\n    return true\n");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::FunctionDeclaration{
+                    identifier: Token::ID(String::from("test")),
+                    parameters: vec![AST::Empty],
+                    body: Box::new(AST::Bloc { children: vec![
+                        Box::new(AST::ReturnStatement {
+                            expression: Box::new(AST::Boolean {token: Token::BOOL(true)}),
+                        })
+                    ]})
+                })
+            )}
+        );
+    }
+
+    #[test]
+    fn return_statement() {
+        let mut parser = parser_generator("return true");
+        assert_eq!(parser.parse(),
+            AST::Program { children: vec!(
+                Box::new(AST::ReturnStatement {
+                    expression: Box::new(AST::Boolean {token: Token::BOOL(true)}),
+                })
+            )}
+        );
     }
 
     #[test]

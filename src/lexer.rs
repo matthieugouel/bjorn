@@ -49,7 +49,7 @@ impl<'a> Lexer<'a> {
 
         let mut spaces_count = 0;
         while let Some(&c) = self.input.peek() {
-            if c != " " {
+            if c != " " && c != "\n" {
                 if spaces_count % spaces_for_indent != 0 {
                     panic!("Indentation error.")
                 }
@@ -73,6 +73,9 @@ impl<'a> Lexer<'a> {
                     }
                     return Some(indent_array)
                 }
+            } else if c == "\n" {
+                spaces_count = 0;
+                self.advance();
             } else {
                 spaces_count += 1;
                 self.advance();
@@ -120,12 +123,18 @@ impl<'a> Lexer<'a> {
         match id.as_ref() {
             "true" => Some(vec![Token::BOOL(true)]),
             "false" => Some(vec![Token::BOOL(false)]),
+
             "or" => Some(vec![Token::OR]),
             "and" => Some(vec![Token::AND]),
             "not" => Some(vec![Token::NOT]),
+
             "if" => Some(vec![Token::IF]),
             "else" => Some(vec![Token::ELSE]),
             "while" => Some(vec![Token::WHILE]),
+
+            "def" => Some(vec![Token::DEF]),
+            "return" => Some(vec![Token::RETURN]),
+
             _ => Some(vec![Token::ID(id)])
         }
     }
@@ -193,6 +202,7 @@ impl<'a> Iterator for Lexer<'a> {
             Some("(") => Some(vec![Token::LPAREN]),
             Some(")") => Some(vec![Token::RPAREN]),
             Some(":") => Some(vec![Token::COLON]),
+            Some(",") => Some(vec![Token::COMMA]),
             Some("#") => self.comment(),
 
             // End of file
@@ -332,6 +342,12 @@ mod tests {
     }
 
     #[test]
+    fn comma() {
+        let scan = scan_generator(",");
+        assert_eq!(scan, vec!(Token::COMMA));
+    }
+
+    #[test]
     fn assign() {
         let scan = scan_generator("=");
         assert_eq!(scan, vec!(Token::ASSIGN));
@@ -426,5 +442,17 @@ mod tests {
     fn while_keyword() {
         let scan = scan_generator("while");
         assert_eq!(scan, vec!(Token::WHILE));
+    }
+
+    #[test]
+    fn def_keyword() {
+        let scan = scan_generator("def");
+        assert_eq!(scan, vec!(Token::DEF));
+    }
+
+    #[test]
+    fn return_keyword() {
+        let scan = scan_generator("return");
+        assert_eq!(scan, vec!(Token::RETURN));
     }
 }

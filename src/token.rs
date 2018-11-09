@@ -4,29 +4,42 @@ pub enum Token {
     FLOAT(String),
     BOOL(bool),
     ID(String),
+
     NEWLINE,
     INDENT,
     DEDENT,
+
     IF,
     ELSE,
     WHILE,
+
+    DEF,
+    RETURN,
+
     COLON,
+    COMMA,
+
     OR,
     AND,
     NOT,
+
     EQ,
     NE,
     LE,
     GE,
     LT,
     GT,
+
     ASSIGN,
+
     PLUS,
     MINUS,
     MUL,
     DIV,
+
     LPAREN,
     RPAREN,
+
     EOF,
 }
 

@@ -1,3 +1,5 @@
+use ast::AST;
+
 use std::fmt;
 use std::ops::Add;
 use std::ops::Sub;
@@ -9,11 +11,12 @@ use std::ops::Not;
 
 use std::cmp::Ordering;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Value {
     Int(i32),
     Float(f64),
     Bool(bool),
+    Function(AST),
     None,
 }
 
@@ -26,6 +29,7 @@ impl Value {
             Value::None => "".to_string(),
             Value::Bool(true) => String::from("true"),
             Value::Bool(false) => String::from("false"),
+            Value::Function(_) => String::from("Function") // TODO
         }
     }
 }
@@ -38,6 +42,7 @@ impl fmt::Display for Value {
             Value::Bool(true) => write!(f, "true"),
             Value::Bool(false) => write!(f, "false"),
             Value::None => write!(f, ""),
+            Value::Function(_) => write!(f, "Function"), // TODO
         }
 
     }

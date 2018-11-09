@@ -22,6 +22,10 @@ impl Memory {
         self.stack.last_mut().unwrap().insert(key, value)
     }
 
+    pub fn remove(&mut self, key: String) -> Option<Value> {
+        self.stack.last_mut().unwrap().remove(&key)
+    }
+
     pub fn push_scope(&mut self, init: HashMap<String, Value>) {
         self.stack.push(init)
     }
