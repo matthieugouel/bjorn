@@ -1,4 +1,5 @@
 use ast::AST;
+use builtins::Callback;
 
 use std::fmt;
 use std::ops::Add;
@@ -17,6 +18,7 @@ pub enum Value {
     Float(f64),
     Bool(bool),
     Function(AST),
+    BuiltinFunction(Callback),
     None,
 }
 
@@ -26,10 +28,11 @@ impl Value {
         match self {
             Value::Int(a) => a.to_string(),
             Value::Float(a) => a.to_string(),
-            Value::None => "".to_string(),
             Value::Bool(true) => String::from("true"),
             Value::Bool(false) => String::from("false"),
-            Value::Function(_) => String::from("Function") // TODO
+            Value::Function(_) => String::from("Function"), // TODO Refactor string representation
+            Value::BuiltinFunction(_) => String::from("BuiltinFunction"), // TODO Refactor string representation
+            Value::None => "".to_string(),
         }
     }
 }
@@ -41,8 +44,9 @@ impl fmt::Display for Value {
             Value::Float(a) => write!(f, "{}", a),
             Value::Bool(true) => write!(f, "true"),
             Value::Bool(false) => write!(f, "false"),
+            Value::Function(_) => write!(f, "Function"), // TODO Refactor string representation
+            Value::BuiltinFunction(_) => write!(f, "BuiltinFunction"), // TODO Refactor string representation
             Value::None => write!(f, ""),
-            Value::Function(_) => write!(f, "Function"), // TODO
         }
 
     }

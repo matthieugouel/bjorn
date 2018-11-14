@@ -19,6 +19,6 @@ fn main() -> io::Result<()> {
 
     let input = fs::read_to_string(matches.value_of("FILEPATH").unwrap())?;
 
-    println!("{}", bjorn::interpret(&input));
+    bjorn::interpret(&input);
     Ok(())
 }

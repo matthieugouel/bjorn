@@ -6,6 +6,7 @@ use parser::Parser;
 use ast::AST;
 use memory::Memory;
 use value::Value;
+use builtins::BuiltinsHandler;
 
 
 pub struct Interpreter<'a> {
@@ -17,6 +18,13 @@ impl<'a> Interpreter<'a> {
 
     pub fn new(parser: Parser<'a>) -> Interpreter<'a>  {
         Interpreter { parser: parser, memory: Memory::new(HashMap::new()) }
+    }
+
+    fn load_builtins(&mut self) {
+
+        let mut builtins_handler = BuiltinsHandler::new();
+        builtins_handler.register_builtins();
+        self.memory.current_scope_mut().unwrap().extend(builtins_handler.builtins);
     }
 
     fn load_functions(&mut self, tree: AST) {
@@ -39,7 +47,7 @@ impl<'a> Interpreter<'a> {
         match tree {
             AST::Program {children} => {
                 // Return the value the last child mostly for testing purposes.
-                // Will be replaced by `print` in the future.
+                // WIll be replaced by eval input in the future.
                 let mut result = Value::None;
 
                 for child in children {
@@ -47,7 +55,7 @@ impl<'a> Interpreter<'a> {
                         AST::FunctionDeclaration {..} => {},
                         _ => {
                             result = self.visit(*child);
-                        }
+                        },
                     };
                 }
                 result
@@ -58,7 +66,8 @@ impl<'a> Interpreter<'a> {
                         AST::Parameter {parameter} => match *parameter {
                             AST::Variable {id} => id.identifier().unwrap(),
                             _ => panic!("Interpreter error.")
-                        }
+                        },
+                        AST::Empty => break,
                         _ => panic!("Interpreter Error.")
                     };
                     let parameter_value = match self.memory.remove(i.to_string()) {
@@ -206,12 +215,47 @@ impl<'a> Interpreter<'a> {
             },
             AST::FunctionCall {identifier, arguments} => {
                 let function_name = identifier.identifier().unwrap();
-                let function_ast = match self.memory.get(function_name) {
+                let mut is_builtin = false;
+                let function_ast = match self.memory.get(function_name.clone()) {
                     Some(Value::Function(ast)) => {
                         ast.clone()
                     },
+                    Some(Value::BuiltinFunction(_)) => {
+                        // For now we are only dealing with one argument builtins functions
+                        // if arguments.len() != 1 {
+                        //     panic!("Interpreter error.")
+                        // }
+                        is_builtin = true;
+                        let first_argument = arguments.first();
+                        match first_argument {
+                            Some(argument) => {
+                                argument.clone()
+                            },
+                            None => panic!("Interpreter error."),
+                        }
+                    },
                     _ => panic!("Interpreter Error.")
                 };
+
+                if is_builtin {
+                    let builtin = match function_ast.clone() {
+                        AST::Parameter {..} => {
+                            match self.memory.get(function_name) {
+                                Some(Value::BuiltinFunction(builtin)) => builtin.clone(),
+                                _ => panic!("Interpreter error.")
+                            }
+                        },
+                        _ => panic!("Interpreter error.")
+                    };
+
+                    match function_ast {
+                        AST::Parameter {parameter} => {
+                            // For now we are only dealing with one argument builtins functions
+                            return builtin(self.visit(*parameter));
+                        },
+                        _ => panic!("Interpreter error.")
+                    };
+                }
 
                 match function_ast {
                     AST::FunctionDeclaration {identifier: _, ref parameters, ..} => {
@@ -230,7 +274,7 @@ impl<'a> Interpreter<'a> {
 
                 self.memory.push_scope(hash_map_arguments);
                 self.load_functions(function_ast.clone());
-                // println!("{:?}", self.memory.current_scope().unwrap());
+                self.load_builtins();
                 let function_result = self.visit(function_ast);
                 self.memory.pop_scope();
                 function_result
@@ -251,6 +295,7 @@ impl<'a> Interpreter<'a> {
     pub fn interpret(&mut self) -> Value {
         let tree = self.parser.parse();
         self.load_functions(tree.clone());
+        self.load_builtins();
         self.visit(tree)
     }
 }

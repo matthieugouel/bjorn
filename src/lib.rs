@@ -13,6 +13,7 @@ mod ast;
 pub mod memory;
 mod interpreter;
 mod value;
+pub mod builtins;
 
 use lexer::Lexer;
 use parser::Parser;
@@ -73,24 +74,6 @@ pub fn interpret(input: &str) -> String {
     ).interpret().to_string()
 }
 
-// ///
-// /// Debug Entrypoint of `bjorn` library.
-// ///
-// /// ```
-// /// extern crate bjorn;
-// ///
-// /// let input = "2 + 2";
-// /// println!("{:?}", bjorn::interpret_debug(input));
-// /// ```
-// ///
-// pub fn interpret_debug(input: &str) -> (String, memory::Memory) {
-//     let mut interpreter = Interpreter::new(
-//         Parser::new(
-//             Lexer::new(input)
-//         )
-//     );
-//     (interpreter.interpret().to_string(), interpreter.memory)
-//}
 
 #[cfg(test)]
 mod tests {
