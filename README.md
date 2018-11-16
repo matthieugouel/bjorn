@@ -19,10 +19,10 @@ $ cargo install bjorn
 First write some code in `bjorn` language in a file (ex. test.bj).
 
 ```
-a = 1
-b = 1
+def add(a, b):
+    return a + b
 
-a + b
+print(add(1, 1))
 ```
 
 Then simply pass the file path as an argument to the `bjorn` interpreter.
